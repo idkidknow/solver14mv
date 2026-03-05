@@ -1,0 +1,7 @@
+out/
+.bsp/
+.metals/
+.vscode/
+.idea/
+result
+/web/solver

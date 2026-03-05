@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - esbuild
+
+patchedDependencies:
+  z3-solver: patches/z3-solver.patch

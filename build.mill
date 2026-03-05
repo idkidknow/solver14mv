@@ -1,0 +1,26 @@
+//| mill-version: 1.1.2
+//| mvnDeps:
+//| - com.goyeau::mill-scalafix::0.6.0
+
+package build
+import mill.*, scalalib.*, scalajslib.*, scalajslib.api.*
+import mill.api.BuildCtx
+import com.goyeau.mill.scalafix.ScalafixModule
+
+object `package` extends ScalaJSModule with ScalafixModule {
+  def scalaVersion = "3.8.2"
+  def scalaJSVersion = "1.20.2"
+
+  def mvnDeps = Seq(
+  )
+
+  def scalacOptions = Seq("-Wunused:imports", "-Wall", "-deprecation")
+
+  def moduleKind = ModuleKind.ESModule
+
+  def copyFast() = Task.Command {
+    val from = fastLinkJS().dest.path
+    val to = BuildCtx.workspaceRoot / "web" / "solver"
+    os.copy.over(from, to, replaceExisting = true, createFolders = true)
+  }
+}
