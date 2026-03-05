@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait MineSweeperSolver {
   def addConstraint(c: Constraint): Unit
   def isSafe(i: Int, j: Int): Future[Boolean]
+  def release(): Unit
 }
 
 object MineSweeperSolver {
@@ -36,9 +37,9 @@ object MineSweeperSolver {
           solver.assert(AST.pbeq(nb, Seq.fill(nb.size)(1), n))
         case Constraint.NotMine(i, j) =>
           solver.assert(isMine(i, j).not)
-        case Constraint.TotalMineCount(n) =>
+        case Constraint.TotalMineCount(total) =>
           val all = (0 until m).flatMap(i => (0 until n).map(j => isMine(i, j))).toSeq
-          solver.assert(AST.pbeq(all, Seq.fill(all.size)(1), n))
+          solver.assert(AST.pbeq(all, Seq.fill(all.size)(1), total))
         case Constraint.NoTriplets =>
           for {
             i <- 1 until m - 1
@@ -71,6 +72,10 @@ object MineSweeperSolver {
             case _ => false
           }
         }
+      }
+
+      override def release(): Unit = {
+        solver.del()
       }
     }
   }
