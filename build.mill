@@ -7,20 +7,24 @@ import mill.*, scalalib.*, scalajslib.*, scalajslib.api.*
 import mill.api.BuildCtx
 import com.goyeau.mill.scalafix.ScalafixModule
 
-object `package` extends ScalaJSModule with ScalafixModule {
-  def scalaVersion = "3.8.2"
+object solver14mv extends ScalaJSModule with ScalafixModule {
+  def scalaVersion = "3.7.4"
   def scalaJSVersion = "1.20.2"
 
   def mvnDeps = Seq(
+    mvn"org.scala-js::scalajs-dom::2.8.1",
+    mvn"com.raquo::laminar::17.2.1",
+    mvn"org.typelevel::cats-effect::3.6.3",
   )
 
   def scalacOptions = Seq("-Wunused:imports", "-Wall", "-deprecation")
 
   def moduleKind = ModuleKind.ESModule
 
-  def copyFast() = Task.Command {
-    val from = fastLinkJS().dest.path
-    val to = BuildCtx.workspaceRoot / "web" / "solver"
-    os.copy.over(from, to, replaceExisting = true, createFolders = true)
+  def dev() = Task.Command {
+    val out = fastLinkJS()
+    val dir = out.dest.path
+    val dest = BuildCtx.workspaceRoot / "_generated" / "solver14mv"
+    os.copy.over(dir, dest, replaceExisting = true, createFolders = true)
   }
 }

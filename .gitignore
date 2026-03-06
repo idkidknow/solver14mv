@@ -4,4 +4,7 @@ out/
 .vscode/
 .idea/
 result
-/web/solver
+node_modules
+dist/
+.rspack-profile-*/
+_generated/
