@@ -13,6 +13,7 @@ import solver14mv.solver.z3.Sort
 
 trait Solver14MV[F[_]] {
   def addClue(i: Int, j: Int, clue: Clue): F[Unit]
+  def check: F[CheckResult]
   def checkSafety(i: Int, j: Int): F[Solver14MV.CellSafety]
   def getSafeCells: F[Seq[(Int, Int)]]
 }
@@ -33,14 +34,17 @@ object Solver14MV {
       def addAssertions(as: Seq[AST]): F[Unit] =
         as.traverse(solver.assert(_)).void
 
-      val isMineArr =
+      val isMineArray =
         AST.const("isMine", Sort.arrayN(Seq(Sort.int, Sort.int), Sort.bool))
-      def isMine(i: Int, j: Int): AST = AST.selectN(isMineArr, Seq(i, j))
+
+      val decls = new Constraint.Declarations {
+        override def isMineArr: AST = isMineArray
+      }
 
       val constraint = Monoid.combineAll(constraints)
 
       val addClueAgnosticAssertions =
-        addAssertions(constraint.generateAssertions(m, n, isMine))
+        addAssertions(constraint.generateAssertions(m, n, decls))
 
       for {
         _ <- addClueAgnosticAssertions
@@ -49,15 +53,19 @@ object Solver14MV {
         override def addClue(i: Int, j: Int, clue: Clue): F[Unit] =
           mutex.lock.use { _ =>
             addAssertions(
-              constraint.generateAssertionsFromClue(m, n, isMine, i, j, clue)
+              constraint.generateAssertionsFromClue(m, n, decls, i, j, clue)
             )
           }
+
+        override def check: F[CheckResult] = mutex.lock.use { _ =>
+          solver.check[F]
+        }
 
         override def checkSafety(i: Int, j: Int): F[CellSafety] =
           mutex.lock.use { _ =>
             for {
               _ <- solver.push
-              _ <- solver.assert(isMine(i, j))
+              _ <- solver.assert(decls.isMine(i, j))
               ret <- solver.check
               _ <- solver.pop
             } yield ret match {

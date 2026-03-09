@@ -12,9 +12,11 @@ object raw {
   opaque type Config <: js.Any = js.Any
   opaque type Context <: js.Any = js.Any
   opaque type AST <: js.Any = js.Any
+  opaque type FuncDecl <: js.Any = js.Any
   opaque type Sort <: js.Any = js.Any
   opaque type Symbol <: js.Any = js.Any
   opaque type Solver <: js.Any = js.Any
+  opaque type Pattern <: js.Any = js.Any
   type Z3LBool = -1 | 0 | 1
 
   @js.native
@@ -65,6 +67,33 @@ object raw {
         k: Int,
     ): AST = js.native
     def mk_not(c: Context, a: AST): AST = js.native
+    def mk_and(c: Context, args: js.Array[AST]): AST = js.native
+    def mk_or(c: Context, args: js.Array[AST]): AST = js.native
+    def mk_implies(c: Context, t1: AST, t2: AST): AST = js.native
+    def mk_eq(c: Context, l: AST, r: AST): AST = js.native
+    def mk_func_decl(
+        c: Context,
+        s: Symbol,
+        domain: js.Array[Sort],
+        range: Sort,
+    ): FuncDecl = js.native
+    def mk_app(c: Context, d: FuncDecl, args: js.Array[AST]): AST = js.native
+    def mk_transitive_closure(c: Context, f: FuncDecl): FuncDecl = js.native
+    def mk_bound(c: Context, index: Int, ty: Sort): AST = js.native
+    def mk_forall(
+        c: Context,
+        weight: Int,
+        patterns: js.Array[Pattern],
+        sorts: js.Array[Sort],
+        decl_names: js.Array[Symbol],
+        body: AST,
+    ): AST = js.native
+    def mk_add(c: Context, args: js.Array[AST]): AST = js.native
+    def mk_mul(c: Context, args: js.Array[AST]): AST = js.native
+    def mk_le(c: Context, t1: AST, t2: AST): AST = js.native
+    def mk_ge(c: Context, t1: AST, t2: AST): AST = js.native
+    def mk_lt(c: Context, t1: AST, t2: AST): AST = js.native
+    def mk_gt(c: Context, t1: AST, t2: AST): AST = js.native
   }
 
   private var inst: Z3 = null
