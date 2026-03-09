@@ -6,5 +6,4 @@ out/
 result
 node_modules
 dist/
-.rspack-profile-*/
 _generated/

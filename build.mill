@@ -14,17 +14,23 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
   def mvnDeps = Seq(
     mvn"org.scala-js::scalajs-dom::2.8.1",
     mvn"com.raquo::laminar::17.2.1",
-    mvn"org.typelevel::cats-effect::3.6.3",
+    mvn"org.typelevel::cats-effect::3.7.0",
+    mvn"co.fs2::fs2-core::3.12.2",
   )
 
   def scalacOptions = Seq("-Wunused:imports", "-Wall", "-deprecation")
 
   def moduleKind = ModuleKind.ESModule
 
+  def miniZincSources = Task.Source("src/minizinc")
+
+  def `main-d-ts` = Task.Source("src/solver14mv/main.d.ts")
+
   def dev() = Task.Command {
     val out = fastLinkJS()
     val dir = out.dest.path
-    val dest = BuildCtx.workspaceRoot / "_generated" / "solver14mv"
-    os.copy.over(dir, dest, replaceExisting = true, createFolders = true)
+    os.copy.over(dir, Task.dest)
+    os.copy(`main-d-ts`().path, Task.dest / "main.d.ts")
+    os.copy(miniZincSources().path, Task.dest / "minizinc")
   }
 }

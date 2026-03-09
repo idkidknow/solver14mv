@@ -2,6 +2,7 @@ package solver14mv.ui
 
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
+import solver14mv.solver.SolveResult.CellSafety
 
 object MinesweeperGrid {
   trait Context {
@@ -12,7 +13,7 @@ object MinesweeperGrid {
 
   def apply(
       clues: Signal[Grid],
-      safeCells: Signal[Set[(Int, Int)]],
+      cellSafety: Signal[Map[(Int, Int), CellSafety]],
       mods: ModFunction*
   ): HtmlElement = {
     val onClickBus = EventBus[(Int, Int)]()
@@ -25,9 +26,9 @@ object MinesweeperGrid {
         val items =
           rowSignal.map(_.toSeq).splitByIndex { case (j, _, clueSignal) =>
             val str = clueSignal.map {
-              case Some(Clue.Number(n)) => n.toString
-              case Some(Clue.QuestionMark) => "?"
-              case None => ""
+              case Clue.Number(n) => n.toString
+              case Clue.QuestionMark => "?"
+              case Clue.None => ""
             }
             td(
               button(
@@ -35,9 +36,13 @@ object MinesweeperGrid {
                 minHeight("4em"),
                 child.text <-- str,
                 onClick.mapTo((i, j)) --> onClickBus,
-                backgroundColor <-- safeCells
-                  .map(_.contains(i, j))
-                  .map(if (_) "#779977" else ""),
+                backgroundColor <-- cellSafety
+                  .map(_.get((i, j)))
+                  .map {
+                    case Some(CellSafety.Safe) => "#779977"
+                    case Some(CellSafety.Mine) => "#AA4477"
+                    case _ => ""
+                  },
               )
             )
           }
