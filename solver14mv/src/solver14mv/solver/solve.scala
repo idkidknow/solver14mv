@@ -4,7 +4,7 @@ import cats.effect.Async
 import cats.syntax.all.*
 import fs2.Stream
 import solver14mv.solver.SolveResult.CellSafety
-import solver14mv.solver.minizinc.MznStrings
+import solver14mv.solver.minizinc.MiniZincFiles
 import solver14mv.solver.minizinc.raw.ParamConfig
 import solver14mv.solver.minizinc.raw.SolveConfig
 
@@ -21,7 +21,7 @@ def solve[F[_]: Async](
   val cluesRaw = clues.map(_.map(_.code).toJSArray).toJSArray
 
   val modelBase = new minizinc.raw.Model()
-  MznStrings.files.foreach { case (name, content) =>
+  MiniZincFiles.files.foreach { case (name, content) =>
     modelBase.addFile(name, content, false)
   }
   val _ = modelBase.addString("""include "solver14mv.mzn";""")

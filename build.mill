@@ -6,6 +6,7 @@ package build
 import mill.*, scalalib.*, scalajslib.*, scalajslib.api.*
 import mill.api.BuildCtx
 import com.goyeau.mill.scalafix.ScalafixModule
+import mill.api.Task.Simple
 
 object solver14mv extends ScalaJSModule with ScalafixModule {
   def scalaVersion = "3.7.4"
@@ -23,6 +24,37 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
   def moduleKind = ModuleKind.ESModule
 
   def miniZincSources = Task.Source("src/minizinc")
+
+  def generatedSources = Task {
+    val files = os.walk(miniZincSources().path).map(_.last)
+    val imports = files
+      .map { name =>
+        s"""@js.native
+         |@JSImport("@scala/minizinc/$name?raw", JSImport.Default)
+         |def `$name`: String = js.native
+      """.stripMargin
+      }
+      .mkString("\n")
+    val map = files
+      .map { name =>
+        s"\"\"\"$name\"\"\" -> `$name`,"
+      }
+      .mkString("\n")
+    os.write(
+      Task.dest / "MiniZincFiles.scala",
+      s"""package solver14mv.solver.minizinc
+         |import scala.scalajs.js
+         |import scala.scalajs.js.annotation.JSImport
+         |object MiniZincFiles {
+         |val files: Map[String, String] = Map(
+         |$map
+         |)
+         |$imports
+         |}
+      """.stripMargin,
+    )
+    Seq(PathRef(Task.dest))
+  }
 
   def `main-d-ts` = Task.Source("src/solver14mv/main.d.ts")
 
