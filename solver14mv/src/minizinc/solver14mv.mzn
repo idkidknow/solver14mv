@@ -16,7 +16,9 @@ type Clue = record(
   int: i,
   int: j,
   ClueType: ty,
-  opt 0..8: vanilla,
+  % QuestionMark: meaningless, always 0
+  % Vanilla: the value
+  int: data,
 );
 
 enum Rule = { Quad, Connected, Triplet, Outside, Dual, Snake, Balance };
@@ -39,7 +41,8 @@ constraint forall(clue in clues)(
   } in
     if ty = QuestionMark then clue_is_not_mine(ctx, mines)
     elseif ty = Vanilla then
-      clue_is_not_mine(ctx, mines) /\ clue_eq_neighboring_8(ctx, deopt(clue.vanilla), mines)
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_neighboring_8(ctx, clue.data, mines)
     else true endif
 );
 

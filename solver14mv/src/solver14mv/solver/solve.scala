@@ -22,7 +22,16 @@ def solve[F[_]: Async](
     val seq = for {
       i <- 0 until m
       j <- 0 until n
-      dzn <- clues(i)(j).toDzn(i + 1, j + 1) // 1-indexed in .mzn, off-by-one
+      // 1-indexed in .mzn, off-by-one
+      ii = i + 1
+      jj = j + 1
+      dzn <- clues(i)(j) match {
+        case Clue.None => None
+        case Clue.QuestionMark =>
+          s"(i: $ii, j: $jj, ty: QuestionMark, data: 0)".some
+        case Clue.Vanilla(value) =>
+          s"(i: $ii, j: $jj, ty: Vanilla, data: $value)".some
+      }
     } yield dzn
     s"[${seq.mkString(",")}]"
   }
