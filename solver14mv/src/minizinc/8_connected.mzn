@@ -10,9 +10,7 @@ function tuple(array [int] of int, array [int] of int): graph_8_connected(int: m
   array [int] of int: to = [(ijkl.3 - 1) * n + ijkl.4 | ijkl in arr];
 } in (from, to);
 
-predicate mines_8_connected(BoardData: board, array [int, int] of var bool: mines) = let {
-  int: m = board.m;
-  int: n = board.n;
+predicate mines_8_connected(int: m, int: n, array [int, int] of var bool: mines) = let {
   tuple(array [int] of int, array [int] of int): from_to = graph_8_connected(m, n);
   array [int] of var bool: mines_flat = [mines[i, j] | i in 1..m, j in 1..n];
   array [index_set(from_to.1)] of var bool: es;

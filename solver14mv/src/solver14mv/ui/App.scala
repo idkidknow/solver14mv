@@ -2,12 +2,12 @@ package solver14mv.ui
 
 import cats.effect.IO
 import cats.effect.std.Dispatcher
+import cats.syntax.all.*
 import com.raquo.laminar.api.L.*
 import solver14mv.solver
 import solver14mv.solver.Clue
-import solver14mv.solver.ConstraintSettings
+import solver14mv.solver.Rule
 import solver14mv.solver.SolveResult.CellSafety
-import cats.syntax.all.*
 
 object App {
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {
@@ -18,11 +18,12 @@ object App {
     val clueToSet = numToSet.signal.mapLazy {
       case -2 => Clue.QuestionMark
       case -1 => Clue.None
-      case num => Clue.Number(num)
+      case num => Clue.Vanilla(num)
     }
     val clues: Var[Grid] = Var(Array.fill(m.now(), n.now())(Clue.None))
     val cellSafety: Var[Map[(Int, Int), CellSafety]] = Var(Map.empty)
-    val constraints = Var(ConstraintSettings())
+    val rules = Var(Set.empty[Rule])
+    val mineCount = Var(0)
 
     val miniZincInitialized = Var(false)
     val initMiniZinc: IO[Unit] =
@@ -37,21 +38,21 @@ object App {
       runningSolverCancel.set(None)
     }
 
-    val cluesInput = modSeq(
+    val basicInfoInput = div(
+      label("m"),
       NumberInput(m, 1, 10),
+      label("n"),
       NumberInput(n, 1, 10),
+      br(),
+      label("mine count"),
+      NumberInput(mineCount, 0, 100),
+    )
+
+    val cluesInput = div(
       mnChanged --> clues.writer.contramap[(Int, Int)] { case (i, j) =>
         Array.fill(i, j)(Clue.None)
       },
       mnChanged --> { _ => stopSolver() },
-      button(
-        onClick.mapTo(
-          Array.fill(m.now(), n.now())(Clue.None)
-        ) --> clues.writer,
-        onClick.mapTo(Map.empty) --> cellSafety.writer,
-        onClick --> { _ => stopSolver() },
-        "reset",
-      ),
       NumberInput(numToSet, -2, 8),
       MinesweeperGrid(
         clues.signal,
@@ -66,15 +67,24 @@ object App {
     )
 
     div(
+      basicInfoInput,
       cluesInput,
-      ConstraintEditor(
-        _.constraints --> constraints.writer
+      button(
+        onClick.mapTo(
+          Array.fill(m.now(), n.now())(Clue.None)
+        ) --> clues.writer,
+        onClick.mapTo(Map.empty) --> cellSafety.writer,
+        onClick --> { _ => stopSolver() },
+        "reset",
+      ),
+      RuleEditor(
+        _.rules --> rules.writer
       ),
       button(
         "solve",
         onClick --> { _ =>
           val solving: IO[Unit] = solver
-            .solve[IO](clues.now(), constraints.now())
+            .solve[IO](clues.now(), rules.now(), mineCount.now())
             .foreach { result =>
               IO.delay {
                 cellSafety.update(

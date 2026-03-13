@@ -1,17 +1,20 @@
 package solver14mv.solver
 
+import cats.syntax.all.*
+
 enum Clue {
-  case Number(n: Int)
-  case QuestionMark
   case None
+  case QuestionMark
+  case Vanilla(value: Int)
 }
 
 object Clue {
   extension (c: Clue) {
-    def code: Int = c match {
-      case None => -1
-      case QuestionMark => -2
-      case Number(n) => n
+    def toDzn(i: Int, j: Int): Option[String] = c match {
+      case None => Option.empty
+      case QuestionMark => s"(i: $i, j: $j, ty: QuestionMark)".some
+      case Vanilla(value) =>
+        s"(i: $i, j: $j, ty: Vanilla, vanilla: $value)".some
     }
   }
 }

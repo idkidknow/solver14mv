@@ -1,8 +1,4 @@
-include "def.mzn";
-
-predicate no_triplets(BoardData: board, array [int, int] of var bool: mines) = let {
-  int: m = board.m;
-  int: n = board.n;
+predicate no_triplets(int: m, int: n, array [int, int] of var bool: mines) = let {
   var bool: vertical = forall(i in 2..m - 1, j in 1..n)(
     mines[i - 1, j] + mines[i, j] + mines[i + 1, j] <= 2
   );

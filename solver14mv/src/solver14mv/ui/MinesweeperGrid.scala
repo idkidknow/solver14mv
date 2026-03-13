@@ -26,9 +26,9 @@ object MinesweeperGrid {
         val items =
           rowSignal.map(_.toSeq).splitByIndex { case (j, _, clueSignal) =>
             val str = clueSignal.map {
-              case Clue.Number(n) => n.toString
-              case Clue.QuestionMark => "?"
               case Clue.None => ""
+              case Clue.QuestionMark => "?"
+              case Clue.Vanilla(n) => n.toString
             }
             td(
               button(

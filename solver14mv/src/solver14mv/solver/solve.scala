@@ -9,16 +9,27 @@ import solver14mv.solver.minizinc.raw.ParamConfig
 import solver14mv.solver.minizinc.raw.SolveConfig
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
+import scala.scalajs.js.Dynamic.literal as lit
 
 def solve[F[_]: Async](
     clues: Array[Array[Clue]],
-    constraints: ConstraintSettings,
+    rules: Set[Rule],
+    mineCount: Int,
 ): Stream[F, SolveResult] = {
   val m = clues.length
   val n = clues.lift(0).map(_.length).getOrElse(0)
-  val constraintsRaw = constraints.toRaw
-  val cluesRaw = clues.map(_.map(_.code).toJSArray).toJSArray
+  val cluesDzn = {
+    val seq = for {
+      i <- 0 until m
+      j <- 0 until n
+      dzn <- clues(i)(j).toDzn(i + 1, j + 1) // 1-indexed in .mzn, off-by-one
+    } yield dzn
+    s"[${seq.mkString(",")}]"
+  }
+  val rulesDzn = {
+    val set = rules.map(_.toDzn)
+    s"{${set.mkString(",")}}"
+  }
 
   val modelBase = new minizinc.raw.Model()
   MiniZincFiles.files.foreach { case (name, content) =>
@@ -26,21 +37,20 @@ def solve[F[_]: Async](
   }
   val _ = modelBase.addString("""include "solver14mv.mzn";""")
   val _ = modelBase.addJson(
-    js.Dynamic.literal(
+    lit(
       m = m,
       n = n,
-      clues = cluesRaw,
+      mine_count = mineCount,
     )
   )
+  val _ = modelBase.addDznString(s"clues = $cluesDzn;\nrules = $rulesDzn;")
 
   def checkCell(i: Int, j: Int, assertIsMine: Boolean): F[SolveResult] = {
     val model = modelBase.cloneModel()
     val _ = model.addJson(
-      js.Dynamic.literal(
-        constraints = constraintsRaw,
+      lit(
         // 1-indexed in .mzn, off-by-one
-        assert_mine =
-          js.Dynamic.literal(i = i + 1, j = j + 1, is_mine = assertIsMine),
+        assert_mine = lit(i = i + 1, j = j + 1, is_mine = assertIsMine)
       )
     )
     val thenable = Async[F].delay {

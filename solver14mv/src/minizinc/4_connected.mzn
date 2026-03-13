@@ -1,5 +1,4 @@
 include "def.mzn";
-include "reachable.mzn";
 include "connected.mzn";
 
 function tuple(array [int] of int, array [int] of int): graph_4_connected(int: m, int: n) = let {
@@ -24,25 +23,19 @@ function tuple(array [int] of int, array [int] of int): graph_4_connected_outsid
   array [int] of int: to = [(ijkl.3 - 1) * n + ijkl.4 | ijkl in arr];
 } in (from, to);
 
-predicate mines_4_connected(BoardData: board, array [int, int] of var bool: mines) = let {
-  int: m = board.m;
-  int: n = board.n;
+predicate mines_4_connected(int: m, int: n, array [int, int] of var bool: mines) = let {
   tuple(array [int] of int, array [int] of int): from_to = graph_4_connected(m, n);
   array [int] of var bool: mines_flat = [mines[i, j] | i in 1..m, j in 1..n];
   array [index_set(from_to.1)] of var bool: es;
 } in connected(from_to.1, from_to.2, mines_flat, es);
 
-predicate mines_4_connected_to_outside(BoardData: board, array [int, int] of var bool: mines) = let {
-  int: m = board.m;
-  int: n = board.n;
+predicate mines_4_connected_to_outside(int: m, int: n, array [int, int] of var bool: mines) = let {
   tuple(array [int] of int, array [int] of int): from_to = graph_4_connected_outside(m, n);
   array [int] of var bool: mines_flat = [mines[i, j] | i in 1..m, j in 1..n] ++ [true];
   array [index_set(from_to.1)] of var bool: es;
 } in connected(from_to.1, from_to.2, mines_flat, es);
 
-predicate non_mines_4_connected(BoardData: board, array [int, int] of var bool: mines) = let {
-  int: m = board.m;
-  int: n = board.n;
+predicate non_mines_4_connected(int: m, int: n, array [int, int] of var bool: mines) = let {
   tuple(array [int] of int, array [int] of int): from_to = graph_4_connected(m, n);
   array [int] of var bool: non_mines_flat = [not(mines[i, j]) | i in 1..m, j in 1..n];
   array [index_set(from_to.1)] of var bool: es;
