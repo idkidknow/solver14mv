@@ -14,12 +14,7 @@ object App {
     val m = Var(8)
     val n = Var(8)
     val mnChanged = m.signal.combineWith(n.signal).changes
-    val numToSet = Var(-2)
-    val clueToSet = numToSet.signal.mapLazy {
-      case -2 => Clue.QuestionMark
-      case -1 => Clue.None
-      case num => Clue.Vanilla(num)
-    }
+
     val clues: Var[Grid] = Var(Array.fill(m.now(), n.now())(Clue.None))
     val cellSafety: Var[Map[(Int, Int), CellSafety]] = Var(Map.empty)
     val rules = Var(Set.empty[Rule])
@@ -43,24 +38,27 @@ object App {
       NumberInput(m, 1, 10),
       label("n"),
       NumberInput(n, 1, 10),
+      mnChanged --> clues.writer.contramap[(Int, Int)] { case (i, j) =>
+        Array.fill(i, j)(Clue.None)
+      },
+      mnChanged --> { _ => stopSolver() },
       br(),
       label("mine count"),
       NumberInput(mineCount, 0, 100),
     )
 
+    val clueBrush = Var(Clue.None)
     val cluesInput = div(
-      mnChanged --> clues.writer.contramap[(Int, Int)] { case (i, j) =>
-        Array.fill(i, j)(Clue.None)
-      },
-      mnChanged --> { _ => stopSolver() },
-      NumberInput(numToSet, -2, 8),
+      ClueBrushEditor(
+        _.clueBrush --> clueBrush
+      ),
       MinesweeperGrid(
         clues.signal,
         cellSafety.signal,
         _.onClick --> clues.updater[(Int, Int)] { case (grid, (i, j)) =>
           grid.updated(
             i,
-            grid(i).updated(j, clueToSet.now()),
+            grid(i).updated(j, clueBrush.now()),
           )
         },
       ),

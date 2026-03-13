@@ -31,6 +31,12 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: QuestionMark, data: 0)".some
         case Clue.Vanilla(value) =>
           s"(i: $ii, j: $jj, ty: Vanilla, data: $value)".some
+        case Clue.Multiple(value) =>
+          s"(i: $ii, j: $jj, ty: Multiple, data: $value)".some
+        case Clue.Liar(value) =>
+          s"(i: $ii, j: $jj, ty: Liar, data: $value)".some
+        case Clue.Negation(value) =>
+          s"(i: $ii, j: $jj, ty: Negation, data: $value)".some
       }
     } yield dzn
     s"[${seq.mkString(",")}]"

@@ -10,14 +10,14 @@ include "neighboring_4.mzn";
 include "neighboring_8.mzn";
 include "row_column_wise.mzn";
 
-enum ClueType = { QuestionMark, Vanilla };
+enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Negation };
 
 type Clue = record(
   int: i,
   int: j,
   ClueType: ty,
   % QuestionMark: meaningless, always 0
-  % Vanilla: the value
+  % Vanilla/Multiple/Liar/Negation: the value
   int: data,
 );
 
@@ -43,6 +43,15 @@ constraint forall(clue in clues)(
     elseif ty = Vanilla then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8(ctx, clue.data, mines)
+    elseif ty = Multiple then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_neighboring_8_checkerboard_weighted_1_2(ctx, clue.data, mines)
+    elseif ty = Liar then
+      clue_is_not_mine(ctx, mines) /\
+        clue_diff_neighboring_8_eq_1(ctx, clue.data, mines)
+    elseif ty = Negation then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_neighboring_8_checkerboard_diff(ctx, clue.data, mines)
     else true endif
 );
 

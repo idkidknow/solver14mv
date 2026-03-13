@@ -25,16 +25,18 @@ object MinesweeperGrid {
       clues.signal.map(_.toSeq).splitByIndex { case (i, _, rowSignal) =>
         val items =
           rowSignal.map(_.toSeq).splitByIndex { case (j, _, clueSignal) =>
-            val str = clueSignal.map {
-              case Clue.None => ""
-              case Clue.QuestionMark => "?"
-              case Clue.Vanilla(n) => n.toString
+            val content = clueSignal.map {
+              case Clue.None => ("", "")
+              case Clue.QuestionMark => ("?", "")
+              case Clue.Vanilla(value) => (value.toString, "")
+              case Clue.Multiple(value) => (value.toString, "M")
+              case Clue.Liar(value) => (value.toString, "L")
+              case Clue.Negation(value) => (value.toString, "N")
             }
             td(
               button(
                 minWidth("4em"),
                 minHeight("4em"),
-                child.text <-- str,
                 onClick.mapTo((i, j)) --> onClickBus,
                 backgroundColor <-- cellSafety
                   .map(_.get((i, j)))
@@ -43,6 +45,12 @@ object MinesweeperGrid {
                     case Some(CellSafety.Mine) => "#AA4477"
                     case _ => ""
                   },
+                div(
+                  child.text <-- content.signal.map(_._1)
+                ),
+                div(
+                  child.text <-- content.signal.map(_._2)
+                ),
               )
             )
           }
