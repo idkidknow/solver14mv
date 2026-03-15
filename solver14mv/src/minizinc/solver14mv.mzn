@@ -13,7 +13,10 @@ include "consecutive.mzn";
 include "neighboring_8_cross.mzn";
 include "eyesight.mzn";
 
-enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight };
+enum ClueType = {
+  QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
+  MiniCross,
+};
 
 type Clue = record(
   int: i,
@@ -70,6 +73,9 @@ constraint forall(clue in clues)(
     elseif ty = Eyesight then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_eyesight(ctx, clue.data, mines)
+    elseif ty = MiniCross then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_neighboring_4(ctx, clue.data, mines)
     else true endif
 );
 

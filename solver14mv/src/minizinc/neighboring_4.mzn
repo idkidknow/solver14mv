@@ -33,3 +33,6 @@ predicate exists_mines_neighboring_4_eq_1(int: m, int: n, array [int, int] of va
       )(mines[kl.1, kl.2]) <= 2;
     } in mines[i, j] -> neighboring_4_count((m: m, n: n, i: i, j: j), mines) = 1
   );
+
+predicate clue_eq_neighboring_4(CellContext: ctx, int: value, array [int, int] of var bool: mines) =
+  value = neighboring_4_count(ctx, mines);

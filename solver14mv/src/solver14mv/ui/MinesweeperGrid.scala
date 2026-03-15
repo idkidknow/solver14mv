@@ -38,6 +38,7 @@ object MinesweeperGrid {
               case Clue.Cross(value) => (value.toString, "X")
               case Clue.Partition(value) => (value.toString, "P")
               case Clue.Eyesight(value) => (value.toString, "E")
+              case Clue.MiniCross(value) => (value.toString, "X'")
             }
             td(
               button(

@@ -46,6 +46,8 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: Partition, data: $value)".some
         case Clue.Eyesight(value) =>
           s"(i: $ii, j: $jj, ty: Eyesight, data: $value)".some
+        case Clue.MiniCross(value) =>
+          s"(i: $ii, j: $jj, ty: MiniCross, data: $value)".some
       }
     } yield dzn
     s"[${seq.mkString(",")}]"

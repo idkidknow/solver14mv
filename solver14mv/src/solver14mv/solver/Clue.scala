@@ -11,4 +11,5 @@ enum Clue {
   case Cross(value: Int)
   case Partition(value: Int)
   case Eyesight(value: Int)
+  case MiniCross(value: Int)
 }
