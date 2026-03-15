@@ -12,10 +12,11 @@ include "row_column_wise.mzn";
 include "consecutive.mzn";
 include "neighboring_8_cross.mzn";
 include "eyesight.mzn";
+include "knight.mzn";
 
 enum ClueType = {
   QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
-  MiniCross,
+  MiniCross, Knight,
 };
 
 type Clue = record(
@@ -23,8 +24,8 @@ type Clue = record(
   int: j,
   ClueType: ty,
   % QuestionMark: meaningless, always 0
-  % Vanilla/Multiple/Liar/Negation/Cross: the value
   % Wall: concatenate digits into a decimal number
+  % Other: the value
   int: data,
 );
 
@@ -76,6 +77,9 @@ constraint forall(clue in clues)(
     elseif ty = MiniCross then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_4(ctx, clue.data, mines)
+    elseif ty = Knight then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_knight_count(ctx, clue.data, mines)
     else true endif
 );
 

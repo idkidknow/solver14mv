@@ -48,6 +48,8 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: Eyesight, data: $value)".some
         case Clue.MiniCross(value) =>
           s"(i: $ii, j: $jj, ty: MiniCross, data: $value)".some
+        case Clue.Knight(value) =>
+          s"(i: $ii, j: $jj, ty: Knight, data: $value)".some
       }
     } yield dzn
     s"[${seq.mkString(",")}]"
