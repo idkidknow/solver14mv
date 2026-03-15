@@ -13,6 +13,7 @@ include "consecutive.mzn";
 include "neighboring_8_cross.mzn";
 include "eyesight.mzn";
 include "knight.mzn";
+include "must_in_triplets.mzn";
 
 enum ClueType = {
   QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
@@ -29,7 +30,7 @@ type Clue = record(
   int: data,
 );
 
-enum Rule = { Quad, Connected, Triplet, Outside, Dual, Snake, Balance };
+enum Rule = { Quad, Connected, Triplet, Outside, Dual, Snake, Balance, TripletPrime };
 
 int: m;
 int: n;
@@ -98,6 +99,7 @@ constraint forall(rule in rules)(
       mines_neighboring_4_le_2(m, n, mines) /\
       exists_mines_neighboring_4_eq_1(m, n, mines)
   elseif rule = Balance then same_row_column_sum(m, n, mines)
+  elseif rule = TripletPrime then must_in_triplets(m, n, mines)
   else true endif
 );
 

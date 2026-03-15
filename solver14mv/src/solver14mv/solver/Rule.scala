@@ -8,10 +8,16 @@ enum Rule {
   case Dual
   case Snake
   case Balance
+  case TripletPrime
 }
 
 object Rule {
   extension (r: Rule) {
     def toDzn: String = r.productPrefix
+
+    def code: String = r match {
+      case TripletPrime => "T'"
+      case _ => r.productPrefix.take(1)
+    }
   }
 }

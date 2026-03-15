@@ -26,7 +26,7 @@ object RuleEditor {
             if (b) s + rule else s - rule
           },
         ),
-        label(s"[${rule.productPrefix.head}]"),
+        label(s"[${rule.code}]"),
       )
     }.toSeq
 
