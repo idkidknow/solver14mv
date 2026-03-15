@@ -83,18 +83,29 @@ def solve[F[_]: Async](
         assert_mine = lit(i = i + 1, j = j + 1, is_mine = assertIsMine)
       )
     )
-    val thenable = Async[F].delay {
-      model.solve(SolveConfig(true, ParamConfig(Some("chuffed"), Map())))
-    }
-    Async[F].fromThenable(thenable).map { ret =>
-      println(ret.status)
-      ret.status match {
-        case "UNSATISFIABLE" =>
-          if (assertIsMine) SolveResult(i, j, SolveResult.CellSafety.Safe)
-          else SolveResult(i, j, SolveResult.CellSafety.Mine)
-        case _ => SolveResult(i, j, SolveResult.CellSafety.Indeterminate)
-      }
-    }
+    def solveWith(solver: String): F[(ret: SolveResult, unknown: Boolean)] =
+      Async[F]
+        .fromThenable(Async[F].delay {
+          model.solve(SolveConfig(true, ParamConfig(Some(solver), Map())))
+        })
+        .map { ret =>
+          ret.status match {
+            case "UNSATISFIABLE" =>
+              if (assertIsMine)
+                SolveResult(i, j, SolveResult.CellSafety.Safe) -> false
+              else SolveResult(i, j, SolveResult.CellSafety.Mine) -> false
+            case "UNKNOWN" =>
+              SolveResult(i, j, SolveResult.CellSafety.Indeterminate) -> true
+            case _ =>
+              SolveResult(i, j, SolveResult.CellSafety.Indeterminate) -> false
+          }
+        }
+
+    // fallback to highs if UNKNOWN
+    for {
+      (ret1, unknown) <- solveWith("chuffed")
+      ret2 <- if (!unknown) ret1.pure else solveWith("highs").map(_.ret)
+    } yield ret2
   }
 
   val indices: Stream[F, (Int, Int)] =
