@@ -1,5 +1,6 @@
 package solver14mv.ui
 
+import cats.syntax.all.*
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
 
@@ -20,7 +21,8 @@ object ClueBrushEditor {
 
     val selected = Var("None")
     def selectOption(v: String) = option(value(v), v)
-    val options = Seq("None", "?", "Vanilla", "Multiple", "Liar", "Negation")
+    val options =
+      Seq("None", "?", "Vanilla", "Multiple", "Liar", "Wall", "Negation")
 
     val dataInput = selected.signal.splitOne(identity) {
       case ("None", _, signal) =>
@@ -62,6 +64,29 @@ object ClueBrushEditor {
           inContext { node =>
             signal.mapTo(node.ref.value) --> writer
           },
+        )
+      case ("Wall", _, signal) =>
+        val writer =
+          clueBrushVar.writer.contracollect[List[String]](Function.unlift {
+            lst =>
+              lst
+                .filter(_.nonEmpty)
+                .traverse(s => s.toIntOption)
+                .map(_.filter(_ =!= 0))
+                .map(Clue.Wall(_))
+          })
+        val vars = List.fill(4)(Var(""))
+        val combined = Signal.combineSeq(vars.map(_.signal)).map(_.toList)
+        val inputs = List.tabulate(4) { i =>
+          input(
+            typ("text"),
+            onInput.mapToValue --> vars(i).writer,
+          )
+        }
+        div(
+          inputs,
+          combined --> writer,
+          signal.sample(combined) --> writer,
         )
       case ("Negation", _, signal) =>
         val writer =

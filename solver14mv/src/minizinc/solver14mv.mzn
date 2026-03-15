@@ -9,8 +9,9 @@ include "8_connected.mzn";
 include "neighboring_4.mzn";
 include "neighboring_8.mzn";
 include "row_column_wise.mzn";
+include "consecutive.mzn";
 
-enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Negation };
+enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation };
 
 type Clue = record(
   int: i,
@@ -18,6 +19,7 @@ type Clue = record(
   ClueType: ty,
   % QuestionMark: meaningless, always 0
   % Vanilla/Multiple/Liar/Negation: the value
+  % Wall: concatenate digits into a decimal number
   int: data,
 );
 
@@ -49,6 +51,11 @@ constraint forall(clue in clues)(
     elseif ty = Liar then
       clue_is_not_mine(ctx, mines) /\
         clue_diff_neighboring_8_eq_1(ctx, clue.data, mines)
+    elseif ty = Wall then let {
+      int: data = clue.data;
+      array [1..4] of 0..8: data_arr = [data mod 10, data div 10 mod 10, data div 100 mod 10, data div 1000 mod 10];
+    } in clue_is_not_mine(ctx, mines) /\
+        consecutive_lengths(ctx, data_arr, mines)
     elseif ty = Negation then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8_checkerboard_diff(ctx, clue.data, mines)

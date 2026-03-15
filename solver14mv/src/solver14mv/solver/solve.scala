@@ -35,6 +35,9 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: Multiple, data: $value)".some
         case Clue.Liar(value) =>
           s"(i: $ii, j: $jj, ty: Liar, data: $value)".some
+        case Clue.Wall(value) =>
+          val data = if (value.nonEmpty) value.mkString else "0"
+          s"(i: $ii, j: $jj, ty: Wall, data: $data)".some
         case Clue.Negation(value) =>
           s"(i: $ii, j: $jj, ty: Negation, data: $value)".some
       }

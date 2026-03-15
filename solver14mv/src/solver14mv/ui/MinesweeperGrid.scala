@@ -31,6 +31,9 @@ object MinesweeperGrid {
               case Clue.Vanilla(value) => (value.toString, "")
               case Clue.Multiple(value) => (value.toString, "M")
               case Clue.Liar(value) => (value.toString, "L")
+              case Clue.Wall(value) =>
+                val str = if (value.nonEmpty) value.mkString(" ") else "0"
+                (str, "W")
               case Clue.Negation(value) => (value.toString, "N")
             }
             td(
