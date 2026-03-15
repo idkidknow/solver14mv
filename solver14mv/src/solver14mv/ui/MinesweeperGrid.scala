@@ -36,6 +36,7 @@ object MinesweeperGrid {
                 (str, "W")
               case Clue.Negation(value) => (value.toString, "N")
               case Clue.Cross(value) => (value.toString, "C")
+              case Clue.Partition(value) => (value.toString, "P")
             }
             td(
               button(

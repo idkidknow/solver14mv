@@ -31,6 +31,7 @@ object ClueBrushEditor {
         "Wall",
         "Negation",
         "Cross",
+        "Partition",
       )
 
     val dataInput = selected.signal.splitOne(identity) {
@@ -113,6 +114,18 @@ object ClueBrushEditor {
         val writer =
           clueBrushVar.writer.contracollect[String](Function.unlift { s =>
             s.toIntOption.map(Clue.Cross(_))
+          })
+        input(
+          typ("text"),
+          onInput.mapToValue --> writer,
+          inContext { node =>
+            signal.mapTo(node.ref.value) --> writer
+          },
+        )
+      case ("Partition", _, signal) =>
+        val writer =
+          clueBrushVar.writer.contracollect[String](Function.unlift { s =>
+            s.toIntOption.map(Clue.Partition(_))
           })
         input(
           typ("text"),

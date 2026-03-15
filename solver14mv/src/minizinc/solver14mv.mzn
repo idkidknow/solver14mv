@@ -12,7 +12,7 @@ include "row_column_wise.mzn";
 include "consecutive.mzn";
 include "neighboring_8_cross.mzn";
 
-enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross };
+enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition };
 
 type Clue = record(
   int: i,
@@ -56,13 +56,16 @@ constraint forall(clue in clues)(
       int: data = clue.data;
       array [1..4] of 0..8: data_arr = [data mod 10, data div 10 mod 10, data div 100 mod 10, data div 1000 mod 10];
     } in clue_is_not_mine(ctx, mines) /\
-        consecutive_lengths(ctx, data_arr, mines)
+        clue_is_consecutive_lengths(ctx, data_arr, mines)
     elseif ty = Negation then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8_checkerboard_diff(ctx, clue.data, mines)
     elseif ty = Cross then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8_cross(ctx, clue.data, mines)
+    elseif ty = Partition then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_consecutive_group_count(ctx, clue.data, mines)
     else true endif
 );
 
