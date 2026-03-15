@@ -10,15 +10,16 @@ include "neighboring_4.mzn";
 include "neighboring_8.mzn";
 include "row_column_wise.mzn";
 include "consecutive.mzn";
+include "neighboring_8_cross.mzn";
 
-enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation };
+enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross };
 
 type Clue = record(
   int: i,
   int: j,
   ClueType: ty,
   % QuestionMark: meaningless, always 0
-  % Vanilla/Multiple/Liar/Negation: the value
+  % Vanilla/Multiple/Liar/Negation/Cross: the value
   % Wall: concatenate digits into a decimal number
   int: data,
 );
@@ -59,6 +60,9 @@ constraint forall(clue in clues)(
     elseif ty = Negation then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8_checkerboard_diff(ctx, clue.data, mines)
+    elseif ty = Cross then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_neighboring_8_cross(ctx, clue.data, mines)
     else true endif
 );
 

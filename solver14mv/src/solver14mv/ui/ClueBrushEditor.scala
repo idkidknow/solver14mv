@@ -22,7 +22,16 @@ object ClueBrushEditor {
     val selected = Var("None")
     def selectOption(v: String) = option(value(v), v)
     val options =
-      Seq("None", "?", "Vanilla", "Multiple", "Liar", "Wall", "Negation")
+      Seq(
+        "None",
+        "?",
+        "Vanilla",
+        "Multiple",
+        "Liar",
+        "Wall",
+        "Negation",
+        "Cross",
+      )
 
     val dataInput = selected.signal.splitOne(identity) {
       case ("None", _, signal) =>
@@ -92,6 +101,18 @@ object ClueBrushEditor {
         val writer =
           clueBrushVar.writer.contracollect[String](Function.unlift { s =>
             s.toIntOption.map(Clue.Negation(_))
+          })
+        input(
+          typ("text"),
+          onInput.mapToValue --> writer,
+          inContext { node =>
+            signal.mapTo(node.ref.value) --> writer
+          },
+        )
+      case ("Cross", _, signal) =>
+        val writer =
+          clueBrushVar.writer.contracollect[String](Function.unlift { s =>
+            s.toIntOption.map(Clue.Cross(_))
           })
         input(
           typ("text"),

@@ -35,6 +35,7 @@ object MinesweeperGrid {
                 val str = if (value.nonEmpty) value.mkString(" ") else "0"
                 (str, "W")
               case Clue.Negation(value) => (value.toString, "N")
+              case Clue.Cross(value) => (value.toString, "C")
             }
             td(
               button(

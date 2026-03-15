@@ -8,4 +8,5 @@ enum Clue {
   case Liar(value: Int)
   case Wall(value: List[Int])
   case Negation(value: Int)
+  case Cross(value: Int)
 }
