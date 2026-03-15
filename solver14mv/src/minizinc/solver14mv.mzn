@@ -16,7 +16,7 @@ include "knight.mzn";
 
 enum ClueType = {
   QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
-  MiniCross, Knight,
+  MiniCross, Knight, LongestWall,
 };
 
 type Clue = record(
@@ -80,6 +80,9 @@ constraint forall(clue in clues)(
     elseif ty = Knight then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_knight_count(ctx, clue.data, mines)
+    elseif ty = LongestWall then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_longest_consecutive_length(ctx, clue.data, mines)
     else true endif
 );
 

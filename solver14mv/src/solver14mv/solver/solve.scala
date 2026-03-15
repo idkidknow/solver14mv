@@ -50,6 +50,8 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: MiniCross, data: $value)".some
         case Clue.Knight(value) =>
           s"(i: $ii, j: $jj, ty: Knight, data: $value)".some
+        case Clue.LongestWall(value) =>
+          s"(i: $ii, j: $jj, ty: LongestWall, data: $value)".some
       }
     } yield dzn
     s"[${seq.mkString(",")}]"
@@ -85,6 +87,7 @@ def solve[F[_]: Async](
       model.solve(SolveConfig(true, ParamConfig(Some("chuffed"), Map())))
     }
     Async[F].fromThenable(thenable).map { ret =>
+      println(ret.status)
       ret.status match {
         case "UNSATISFIABLE" =>
           if (assertIsMine) SolveResult(i, j, SolveResult.CellSafety.Safe)

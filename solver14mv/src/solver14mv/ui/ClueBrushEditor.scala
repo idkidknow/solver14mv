@@ -35,6 +35,7 @@ object ClueBrushEditor {
         "Eyesight",
         "MiniCross",
         "Knight",
+        "LongestWall",
       )
 
     val dataInput = selected.signal.splitOne(identity) {
@@ -165,6 +166,18 @@ object ClueBrushEditor {
         val writer =
           clueBrushVar.writer.contracollect[String](Function.unlift { s =>
             s.toIntOption.map(Clue.Knight(_))
+          })
+        input(
+          typ("text"),
+          onInput.mapToValue --> writer,
+          inContext { node =>
+            signal.mapTo(node.ref.value) --> writer
+          },
+        )
+      case ("LongestWall", _, signal) =>
+        val writer =
+          clueBrushVar.writer.contracollect[String](Function.unlift { s =>
+            s.toIntOption.map(Clue.LongestWall(_))
           })
         input(
           typ("text"),

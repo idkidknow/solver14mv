@@ -26,3 +26,7 @@ predicate clue_is_consecutive_lengths(CellContext: ctx, array [1..4] of var 0..8
 predicate clue_eq_consecutive_group_count(CellContext: ctx, 0..4: value, array [int, int] of var bool: mines) = let {
   array [1..4] of var 0..8: lengths;
 } in increasing(lengths) /\ sum(idx in 1..4)(lengths[idx] > 0) = value /\ clue_is_consecutive_lengths(ctx, lengths, mines);
+
+predicate clue_eq_longest_consecutive_length(CellContext: ctx, 0..8: value, array [int, int] of var bool: mines) = let {
+  array [1..4] of var 0..8: lengths;
+} in increasing(lengths) /\ lengths[4] = value /\ clue_is_consecutive_lengths(ctx, lengths, mines);

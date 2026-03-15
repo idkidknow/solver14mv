@@ -40,6 +40,7 @@ object MinesweeperGrid {
               case Clue.Eyesight(value) => (value.toString, "E")
               case Clue.MiniCross(value) => (value.toString, "X'")
               case Clue.Knight(value) => (value.toString, "K")
+              case Clue.LongestWall(value) => (value.toString, "W'")
             }
             td(
               button(

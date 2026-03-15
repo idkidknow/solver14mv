@@ -13,4 +13,5 @@ enum Clue {
   case Eyesight(value: Int)
   case MiniCross(value: Int)
   case Knight(value: Int)
+  case LongestWall(value: Int)
 }
