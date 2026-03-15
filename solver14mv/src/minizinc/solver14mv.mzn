@@ -11,8 +11,9 @@ include "neighboring_8.mzn";
 include "row_column_wise.mzn";
 include "consecutive.mzn";
 include "neighboring_8_cross.mzn";
+include "eyesight.mzn";
 
-enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition };
+enum ClueType = { QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight };
 
 type Clue = record(
   int: i,
@@ -66,6 +67,9 @@ constraint forall(clue in clues)(
     elseif ty = Partition then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_consecutive_group_count(ctx, clue.data, mines)
+    elseif ty = Eyesight then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_eyesight(ctx, clue.data, mines)
     else true endif
 );
 
