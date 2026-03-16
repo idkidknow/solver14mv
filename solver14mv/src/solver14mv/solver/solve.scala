@@ -29,6 +29,8 @@ def solve[F[_]: Async](
         case Clue.None => None
         case Clue.QuestionMark =>
           s"(i: $ii, j: $jj, ty: QuestionMark, data: 0)".some
+        case Clue.Flagged =>
+          s"(i: $ii, j: $jj, ty: Flagged, data: 0)".some
         case Clue.Vanilla(value) =>
           s"(i: $ii, j: $jj, ty: Vanilla, data: $value)".some
         case Clue.Multiple(value) =>
@@ -102,6 +104,13 @@ def solve[F[_]: Async](
               SolveResult(i, j, SolveResult.CellSafety.Indeterminate) -> false
           }
         }
+        .attemptTap {
+          case Left(_) =>
+            Async[F].delay {
+              org.scalajs.dom.console.error(s"failed when checking ($i, $j)")
+            }
+          case Right(_) => ().pure
+        }
 
     // fallback to highs if UNKNOWN
     for {
@@ -112,9 +121,9 @@ def solve[F[_]: Async](
 
   val indices: Stream[F, (Int, Int)] =
     Stream.range(0, m).flatMap(i => Stream.range(0, n).map(j => (i, j)))
-  val check: Stream[F, SolveResult] = indices
+  val check: Stream[F, SolveResult] = (indices
     .parEvalMapUnordered(8) { case (i, j) => checkCell(i, j, true) } ++
-    indices.parEvalMapUnordered(8) { case (i, j) => checkCell(i, j, false) }
+    indices.parEvalMapUnordered(8) { case (i, j) => checkCell(i, j, false) })
 
   // Emit "Indeterminate" result only when both checks resulting in unsat (found "Indeterminate" twice)
   check

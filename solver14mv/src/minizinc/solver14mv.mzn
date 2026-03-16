@@ -16,7 +16,8 @@ include "knight.mzn";
 include "must_in_triplets.mzn";
 
 enum ClueType = {
-  QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
+  QuestionMark, Flagged,
+  Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
   MiniCross, Knight, LongestWall, EyesightPrime,
 };
 
@@ -25,6 +26,7 @@ type Clue = record(
   int: j,
   ClueType: ty,
   % QuestionMark: meaningless, always 0
+  % Flagged: meaningless, always 0
   % Wall: concatenate digits into a decimal number
   % EyesightPrime: horizontal - vertical
   % Other: the value
@@ -53,6 +55,7 @@ constraint forall(clue in clues)(
     ClueType: ty = clue.ty;
   } in
     if ty = QuestionMark then clue_is_not_mine(ctx, mines)
+    elseif ty = Flagged then not(clue_is_not_mine(ctx, mines))
     elseif ty = Vanilla then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_neighboring_8(ctx, clue.data, mines)

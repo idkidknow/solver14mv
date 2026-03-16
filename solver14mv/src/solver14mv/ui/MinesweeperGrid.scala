@@ -28,6 +28,7 @@ object MinesweeperGrid {
             val content = clueSignal.map {
               case Clue.None => ("", "")
               case Clue.QuestionMark => ("?", "")
+              case Clue.Flagged => ("🚩", "")
               case Clue.Vanilla(value) => (value.toString, "")
               case Clue.Multiple(value) => (value.toString, "M")
               case Clue.Liar(value) => (value.toString, "L")

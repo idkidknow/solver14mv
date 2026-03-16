@@ -3,6 +3,7 @@ package solver14mv.solver
 enum Clue {
   case None
   case QuestionMark
+  case Flagged
   case Vanilla(value: Int)
   case Multiple(value: Int)
   case Liar(value: Int)

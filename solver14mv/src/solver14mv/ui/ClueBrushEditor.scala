@@ -25,6 +25,7 @@ object ClueBrushEditor {
       Seq(
         "None",
         "?",
+        "🚩(debug)",
         "Vanilla",
         "Multiple",
         "Liar",
@@ -44,6 +45,8 @@ object ClueBrushEditor {
         div(signal.mapTo(Clue.None) --> clueBrushVar.writer)
       case ("?", _, signal) =>
         div(signal.mapTo(Clue.QuestionMark) --> clueBrushVar.writer)
+      case ("🚩(debug)", _, signal) =>
+        div(signal.mapTo(Clue.Flagged) --> clueBrushVar.writer)
       case ("Vanilla", _, signal) =>
         val writer =
           clueBrushVar.writer.contracollect[String](Function.unlift { s =>
