@@ -36,6 +36,7 @@ object ClueBrushEditor {
         "MiniCross",
         "Knight",
         "LongestWall",
+        "Eyesight'",
       )
 
     val dataInput = selected.signal.splitOne(identity) {
@@ -185,6 +186,32 @@ object ClueBrushEditor {
           inContext { node =>
             signal.mapTo(node.ref.value) --> writer
           },
+        )
+      case ("Eyesight'", _, signal) =>
+        val writer =
+          clueBrushVar.writer.contracollect[String](Function.unlift { s =>
+            s.toIntOption.map(Clue.EyesightPrime(_))
+          })
+        div(
+          input(
+            typ("text"),
+            controlled(
+              value <-- clueBrushVar.signal.changes.collect {
+                case Clue.EyesightPrime(value) => value.toString
+              },
+              onInput.mapToValue --> writer,
+            ),
+            inContext { node =>
+              signal.mapTo(node.ref.value) --> writer
+            },
+          ),
+          button(
+            "toggle",
+            onClick --> clueBrushVar.updater {
+              case (Clue.EyesightPrime(value), _) => Clue.EyesightPrime(-value)
+              case (prev, _) => prev
+            },
+          ),
         )
       case _ => emptyNode
     }

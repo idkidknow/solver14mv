@@ -17,7 +17,7 @@ include "must_in_triplets.mzn";
 
 enum ClueType = {
   QuestionMark, Vanilla, Multiple, Liar, Wall, Negation, Cross, Partition, Eyesight,
-  MiniCross, Knight, LongestWall,
+  MiniCross, Knight, LongestWall, EyesightPrime,
 };
 
 type Clue = record(
@@ -26,6 +26,7 @@ type Clue = record(
   ClueType: ty,
   % QuestionMark: meaningless, always 0
   % Wall: concatenate digits into a decimal number
+  % EyesightPrime: horizontal - vertical
   % Other: the value
   int: data,
 );
@@ -87,6 +88,9 @@ constraint forall(clue in clues)(
     elseif ty = LongestWall then
       clue_is_not_mine(ctx, mines) /\
         clue_eq_longest_consecutive_length(ctx, clue.data, mines)
+    elseif ty = EyesightPrime then
+      clue_is_not_mine(ctx, mines) /\
+        clue_eq_eyesight_diff(ctx, clue.data, mines)
     else true endif
 );
 

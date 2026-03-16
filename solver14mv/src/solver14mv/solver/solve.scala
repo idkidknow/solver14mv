@@ -52,6 +52,8 @@ def solve[F[_]: Async](
           s"(i: $ii, j: $jj, ty: Knight, data: $value)".some
         case Clue.LongestWall(value) =>
           s"(i: $ii, j: $jj, ty: LongestWall, data: $value)".some
+        case Clue.EyesightPrime(value) =>
+          s"(i: $ii, j: $jj, ty: EyesightPrime, data: $value)".some
       }
     } yield dzn
     s"[${seq.mkString(",")}]"
