@@ -33,7 +33,7 @@ type Clue = record(
 
 enum Rule = {
   Quad, Connected, Triplet, Outside, Dual, Snake, Balance,
-  TripletPrime, Battleship, AntiKnight, Horizontal,
+  TripletPrime, Battleship, AntiKnight, Horizontal, Unary,
 };
 
 int: m;
@@ -113,6 +113,7 @@ constraint forall(rule in rules)(
       no_vertical_quintuplets_of_mines(m, n, mines)
   elseif rule = AntiKnight then no_knights_move_duplets_of_mines(m, n, mines)
   elseif rule = Horizontal then no_horizontal_duplets_of_mines(m, n, mines)
+  elseif rule = Unary then mines_neighboring_4_eq_0(m, n, mines)
   else true endif
 );
 

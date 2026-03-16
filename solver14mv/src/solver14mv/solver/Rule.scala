@@ -12,6 +12,7 @@ enum Rule {
   case Battleship
   case AntiKnight
   case Horizontal
+  case Unary
 }
 
 object Rule {
