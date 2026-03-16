@@ -1,7 +1,7 @@
 include "def.mzn";
 include "clue_is_not_mine.mzn";
 include "total_mine_count_eq.mzn";
-include "no_triplets.mzn";
+include "tuplet.mzn";
 include "8_connected.mzn";
 include "quad_ge_1.mzn";
 include "4_connected.mzn";
@@ -30,7 +30,10 @@ type Clue = record(
   int: data,
 );
 
-enum Rule = { Quad, Connected, Triplet, Outside, Dual, Snake, Balance, TripletPrime };
+enum Rule = {
+  Quad, Connected, Triplet, Outside, Dual, Snake, Balance,
+  TripletPrime, Battleship, AntiKnight, Horizontal,
+};
 
 int: m;
 int: n;
@@ -90,7 +93,7 @@ constraint forall(clue in clues)(
 constraint forall(rule in rules)(
   if rule = Quad then quad_ge_1(m, n, mines)
   elseif rule = Connected then mines_8_connected(m, n, mines)
-  elseif rule = Triplet then no_triplets(m, n, mines)
+  elseif rule = Triplet then no_triplets_of_mines(m, n, mines)
   elseif rule = Outside then
     non_mines_4_connected(m, n, mines) /\ mines_4_connected_to_outside(m, n, mines)
   elseif rule = Dual then mines_neighboring_4_eq_1(m, n, mines)
@@ -100,6 +103,12 @@ constraint forall(rule in rules)(
       exists_mines_neighboring_4_eq_1(m, n, mines)
   elseif rule = Balance then same_row_column_sum(m, n, mines)
   elseif rule = TripletPrime then must_in_triplets(m, n, mines)
+  elseif rule = Battleship then
+    no_skew_duplets_of_mines(m, n, mines) /\
+      no_horizontal_quintuplets_of_mines(m, n, mines) /\
+      no_vertical_quintuplets_of_mines(m, n, mines)
+  elseif rule = AntiKnight then no_knights_move_duplets_of_mines(m, n, mines)
+  elseif rule = Horizontal then no_horizontal_duplets_of_mines(m, n, mines)
   else true endif
 );
 

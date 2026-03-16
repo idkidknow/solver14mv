@@ -9,6 +9,9 @@ enum Rule {
   case Snake
   case Balance
   case TripletPrime
+  case Battleship
+  case AntiKnight
+  case Horizontal
 }
 
 object Rule {
@@ -17,6 +20,7 @@ object Rule {
 
     def code: String = r match {
       case TripletPrime => "T'"
+      case Battleship => "D'"
       case _ => r.productPrefix.take(1)
     }
   }
