@@ -3,8 +3,14 @@ package solver14mv.ui
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
 import solver14mv.solver.SolveResult.CellSafety
+import scala.scalajs.js
 
 object MinesweeperGrid {
+  trait Styles {
+    val btn: StrictSignal[String]
+  }
+  val styles = MinesweeperGridModuleCSS.as[Styles]
+
   trait Context {
     def onClick: EventStream[(Int, Int)]
   }
@@ -51,8 +57,7 @@ object MinesweeperGrid {
             }
             td(
               button(
-                minWidth("4em"),
-                minHeight("4em"),
+                cls <-- styles.btn,
                 onClick.mapTo((i, j)) --> onClickBus,
                 backgroundColor <-- cellSafety
                   .map(_.get((i, j)))

@@ -19,20 +19,20 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
     mvn"co.fs2::fs2-core::3.12.2",
   )
 
-  def scalacOptions = Seq("-Wunused:imports", "-Wall", "-deprecation")
+  def scalacOptions =
+    Seq("-Wunused:imports", "-Wall", "-deprecation", "-experimental")
 
   def moduleKind = ModuleKind.ESModule
 
-  def miniZincSources = Task.Source("src/minizinc")
-
-  def generatedSources = Task {
-    val files = os.walk(miniZincSources().path).map(_.last)
+  def miniZincSourceRoot = Task.Source("src/minizinc")
+  def mznImports = Task {
+    val files = os.walk(miniZincSourceRoot().path).map(_.last)
     val imports = files
       .map { name =>
         s"""@js.native
-         |@JSImport("@scala/minizinc/$name?raw", JSImport.Default)
-         |def `$name`: String = js.native
-      """.stripMargin
+       |@JSImport("@src/minizinc/$name?raw", JSImport.Default)
+       |val `$name`: String = js.native
+       |""".stripMargin
       }
       .mkString("\n")
     val map = files
@@ -43,26 +43,67 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
     os.write(
       Task.dest / "MiniZincFiles.scala",
       s"""package solver14mv.solver.minizinc
-         |import scala.scalajs.js
-         |import scala.scalajs.js.annotation.JSImport
-         |object MiniZincFiles {
-         |val files: Map[String, String] = Map(
-         |$map
-         |)
-         |$imports
-         |}
-      """.stripMargin,
+       |import scala.scalajs.js
+       |import scala.scalajs.js.annotation.JSImport
+       |object MiniZincFiles {
+       |val files: Map[String, String] = Map(
+       |$map
+       |)
+       |$imports
+       |}
+       |""".stripMargin,
     )
-    Seq(PathRef(Task.dest))
+    PathRef(Task.dest)
+  }
+
+  def cssSourceRoot = Task.Source("src")
+  def cssSources = Task {
+    val root = cssSourceRoot().path
+    val relPaths = os
+      .walk(root)
+      .filter(_.last.endsWith(".module.css"))
+      .map(_.relativeTo(root))
+    (root, relPaths)
+  }
+  def cssModuleImports = Task {
+    val (root, relPaths) = cssSources()
+    relPaths.foreach { path =>
+      val parent = os.RelPath(path.toNIO.getParent)
+      val pkg = path.segments.dropRight(1).mkString(".")
+      val cls = path.last.replaceAll("""\.module\.css$""", "ModuleCSS")
+      val atPath = s"@src/${path.toString}"
+      os.write(
+        Task.dest / parent / s"$cls.scala",
+        s"""package $pkg
+           |import scala.scalajs.js
+           |import scala.scalajs.js.annotation.JSImport
+           |import solver14mv.macros.moduleCSS
+           |object $cls {
+           |  @js.native
+           |  @JSImport("$atPath", JSImport.Default)
+           |  @annotation.publicInBinary
+           |  protected val obj: js.Object = js.native
+           |
+           |  inline def as[A]: A = moduleCSS[A]("$atPath", obj)
+           |}
+           |""".stripMargin,
+        createFolders = true,
+      )
+    }
+    PathRef(Task.dest)
+  }
+
+  def generatedSources = Task {
+    Seq(mznImports(), cssModuleImports())
   }
 
   def `main-d-ts` = Task.Source("src/solver14mv/main.d.ts")
 
-  def dev() = Task.Command {
+  def dev = Task {
     val out = fastLinkJS()
     val dir = out.dest.path
     os.copy.over(dir, Task.dest)
     os.copy(`main-d-ts`().path, Task.dest / "main.d.ts")
-    os.copy(miniZincSources().path, Task.dest / "minizinc")
+    PathRef(Task.dest)
   }
 }
