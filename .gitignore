@@ -3,6 +3,7 @@ out/
 .metals/
 .vscode/
 .idea/
+.zed/
 result
 node_modules
 dist/
