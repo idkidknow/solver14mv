@@ -8,6 +8,7 @@ import solver14mv.solver
 import solver14mv.solver.Clue
 import solver14mv.solver.Rule
 import solver14mv.solver.SolveResult.CellSafety
+import solver14mv.ui.components.Button
 
 object App {
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {
@@ -65,9 +66,11 @@ object App {
     )
 
     div(
+      Header(),
+      BoardSettingsInput(),
       basicInfoInput,
       cluesInput,
-      button(
+      Button(variant = "secondary")(
         onClick.mapTo(
           Array.fill(m.now(), n.now())(Clue.None)
         ) --> clues.writer,
@@ -78,7 +81,7 @@ object App {
       RuleEditor(
         _.rules --> rules.writer
       ),
-      button(
+      Button()(
         "solve",
         onClick --> { _ =>
           val solving: IO[Unit] = solver
@@ -106,7 +109,7 @@ object App {
         },
         disabled <-- miniZincInitialized.signal.not,
       ),
-      button(
+      Button(variant = "secondary")(
         "stop",
         onClick --> { _ => stopSolver() },
         disabled <-- runningSolverCancel.signal.map(_.isEmpty),

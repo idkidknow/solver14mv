@@ -1,0 +1,42 @@
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  gap: 1rem;
+  padding: 0.4rem 0.5rem 0.4rem 1rem;
+
+  container-type: inline-size;
+
+  & > h1 {
+    flex-grow: 1;
+    flex-shrink: 0;
+    font-size: 1.6rem;
+    text-wrap-mode: nowrap;
+
+    :nth-child(1) {
+      display: none;
+    }
+    :nth-child(2) {
+      display: inline;
+    }
+
+    @container (width > 40em) {
+      :nth-child(1) {
+        display: inline;
+      }
+      :nth-child(2) {
+        display: none;
+      }
+    }
+  }
+
+  & > a {
+    flex-grow: 0;
+    & > svg {
+      width: 1.8rem;
+      height: 1.8rem;
+    }
+  }
+}
