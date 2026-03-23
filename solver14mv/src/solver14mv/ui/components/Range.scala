@@ -17,8 +17,9 @@ object Range {
   def apply(
       min: Int,
       max: Int,
+      default: Int,
   )(mods: ModFunction*): HtmlElement = {
-    val valueVar = Var(min)
+    val valueVar = Var(default)
     val ctx = new Context {
       override def value: Var[Int] = valueVar
     }

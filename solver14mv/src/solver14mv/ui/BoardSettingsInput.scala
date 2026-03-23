@@ -6,36 +6,92 @@ import solver14mv.ui.components.Input
 import solver14mv.ui.components.Checkbox
 
 object BoardSettingsInput {
-  def apply(): HtmlElement = {
+  trait Styles {
+    val root: StrictSignal[String]
+    val rowCol: StrictSignal[String]
+    val label2: StrictSignal[String]
+  }
+  val styles = BoardSettingsInputModuleCSS.as[Styles]
+
+  final case class Settings(
+      row: Int,
+      col: Int,
+      mineCount: Option[Int],
+  )
+
+  trait Context {
+    def settings: Signal[Settings]
+  }
+
+  def settings(using ctx: Context): Signal[Settings] = ctx.settings
+
+  type ModFunction = Context ?=> Mod[HtmlElement]
+
+  def apply(mods: ModFunction*): HtmlElement = {
+    val row = Var(8)
+    val col = Var(8)
+    val mineCounting = Var(true)
+    val mineCount = Var(26)
+    val settingsSignal = Signal
+      .combine(row, col, mineCounting, mineCount)
+      .map { case (row, col, mineCounting, mineCount) =>
+        Settings(row, col, if (mineCounting) Some(mineCount) else None)
+      }
+      .distinct
+
+    val ctx = new Context {
+      override def settings: Signal[Settings] = settingsSignal
+    }
+
     div(
+      cls <-- styles.root,
       Field.Set(
         Field.Legend("legend")("board"),
         Field.Group(
           div(
-            cls("grid grid-cols-2 gap-4"),
+            cls <-- styles.rowCol,
             Field()(
-              Field.Label("row"),
-              components.Range(1, 10)(),
+              div(
+                cls <-- styles.label2,
+                Field.Label("row"),
+                span(text <-- row.signal),
+              ),
+              components.Range(1, 10, default = 8)(
+                components.Range.value.signal --> row
+              ),
             ),
             Field()(
-              Field.Label("col"),
-              components.Range(1, 10)(),
+              div(
+                cls <-- styles.label2,
+                Field.Label("col"),
+                span(text <-- col.signal),
+              ),
+              components.Range(1, 10, default = 8)(
+                components.Range.value.signal --> col
+              ),
             ),
-          )
-        ),
-        Field.Group(
-          Field("horizontal")(
-            Checkbox(),
-            Field.Label("Mine counting"),
           ),
           Field()(
-            Field.Label("Mine count"),
-            Input("number")(
-              placeholder("Unknown")
+            div(
+              cls <-- styles.label2,
+              Field.Label("Mine count"),
+              Checkbox(true)(
+                Checkbox.checked --> mineCounting
+              ),
+            ),
+            Input("text")(
+              controlled(
+                value <-- mineCount.signal.map(_.toString),
+                onInput.mapToValue.map(s => s.toIntOption).collect {
+                  case Some(i) if i >= 0 => i
+                } --> mineCount.writer,
+              ),
+              disabled <-- mineCounting.signal.not,
             ),
           ),
         ),
-      )
+      ),
+      mods.map(_(using ctx)),
     )
   }
 }

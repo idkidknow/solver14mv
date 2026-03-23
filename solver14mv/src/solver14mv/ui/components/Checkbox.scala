@@ -14,8 +14,8 @@ object Checkbox {
 
   type ModFunction = Context ?=> Mod[HtmlElement]
 
-  def apply(mods: ModFunction*): HtmlElement = {
-    val checkedVar = Var(false)
+  def apply(default: Boolean = false)(mods: ModFunction*): HtmlElement = {
+    val checkedVar = Var(default)
     val ctx = new Context {
       override def checked: Var[Boolean] = checkedVar
     }

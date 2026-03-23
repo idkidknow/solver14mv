@@ -9,17 +9,16 @@ import solver14mv.solver.Clue
 import solver14mv.solver.Rule
 import solver14mv.solver.SolveResult.CellSafety
 import solver14mv.ui.components.Button
+import solver14mv.ui.BoardSettingsInput.Settings
 
 object App {
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {
     val m = Var(8)
     val n = Var(8)
-    val mnChanged = m.signal.combineWith(n.signal).changes
-
+    val mineCount = Var(0)
     val clues: Var[Grid] = Var(Array.fill(m.now(), n.now())(Clue.None))
     val cellSafety: Var[Map[(Int, Int), CellSafety]] = Var(Map.empty)
     val rules = Var(Set.empty[Rule])
-    val mineCount = Var(0)
 
     val miniZincInitialized = Var(false)
     val initMiniZinc: IO[Unit] =
@@ -34,19 +33,11 @@ object App {
       runningSolverCancel.set(None)
     }
 
-    val basicInfoInput = div(
-      label("m"),
-      NumberInput(m, 1, 10),
-      label("n"),
-      NumberInput(n, 1, 10),
-      mnChanged --> clues.writer.contramap[(Int, Int)] { case (i, j) =>
-        Array.fill(i, j)(Clue.None)
-      },
-      mnChanged --> { _ => stopSolver() },
-      br(),
-      label("mine count"),
-      NumberInput(mineCount, 0, 100),
-    )
+    def reset(m: Int, n: Int): Unit = {
+      stopSolver()
+      clues.set(Array.fill(m, n)(Clue.None))
+      cellSafety.set(Map.empty)
+    }
 
     val clueBrush = Var(Clue.None)
     val cluesInput = div(
@@ -64,18 +55,19 @@ object App {
         },
       ),
     )
-
     div(
       Header(),
-      BoardSettingsInput(),
-      basicInfoInput,
+      BoardSettingsInput(
+        BoardSettingsInput.settings --> Observer.combine(
+          m.writer.contramap[Settings](_.row),
+          n.writer.contramap[Settings](_.col),
+          mineCount.writer.contramap[Settings](_.mineCount.getOrElse(0)),
+        )
+      ),
+      Signal.combine(m, n).changes --> { case (m, n) => reset(m, n) },
       cluesInput,
       Button(variant = "secondary")(
-        onClick.mapTo(
-          Array.fill(m.now(), n.now())(Clue.None)
-        ) --> clues.writer,
-        onClick.mapTo(Map.empty) --> cellSafety.writer,
-        onClick --> { _ => stopSolver() },
+        onClick --> { _ => reset(m.now(), n.now()) },
         "reset",
       ),
       RuleEditor(

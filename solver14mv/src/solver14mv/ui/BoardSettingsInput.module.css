@@ -1,0 +1,16 @@
+.root {
+  margin: 1rem;
+  max-width: 30rem;
+}
+
+.rowCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.label2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
