@@ -32,6 +32,11 @@ object BoardSettingsInput {
     val col = Var(8)
     val mineCounting = Var(true)
     val mineCount = Var(26)
+    val mineCountUpdater = mineCount
+      .updater[(Option[Int], Int, Int)] {
+        case (_, (Some(i), row, col)) => 0.max(i.min(row * col))
+        case (prev, _) => prev
+      }
     val settingsSignal = Signal
       .combine(row, col, mineCounting, mineCount)
       .map { case (row, col, mineCounting, mineCount) =>
@@ -80,12 +85,15 @@ object BoardSettingsInput {
               ),
             ),
             Input("text")(
-              controlled(
-                value <-- mineCount.signal.map(_.toString),
-                onInput.mapToValue.map(s => s.toIntOption).collect {
-                  case Some(i) if i >= 0 => i
-                } --> mineCount.writer,
-              ),
+              value <-- mineCount.signal.map(_.toString),
+              onChange.mapToValue
+                .map(s => s.toIntOption)
+                .compose(_.withCurrentValueOf(row, col)) --> mineCountUpdater,
+              Signal
+                .combine(row, col)
+                .distinct
+                .withCurrentValueOf(mineCount)
+                .map((row, col, i) => (Some(i), row, col)) --> mineCountUpdater,
               disabled <-- mineCounting.signal.not,
             ),
           ),

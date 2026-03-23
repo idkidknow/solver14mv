@@ -15,7 +15,7 @@ object App {
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {
     val m = Var(8)
     val n = Var(8)
-    val mineCount = Var(0)
+    val mineCount = Var(Option(26))
     val clues: Var[Grid] = Var(Array.fill(m.now(), n.now())(Clue.None))
     val cellSafety: Var[Map[(Int, Int), CellSafety]] = Var(Map.empty)
     val rules = Var(Set.empty[Rule])
@@ -61,10 +61,10 @@ object App {
         BoardSettingsInput.settings --> Observer.combine(
           m.writer.contramap[Settings](_.row),
           n.writer.contramap[Settings](_.col),
-          mineCount.writer.contramap[Settings](_.mineCount.getOrElse(0)),
+          mineCount.writer.contramap[Settings](_.mineCount),
         )
       ),
-      Signal.combine(m, n).changes --> { case (m, n) => reset(m, n) },
+      Signal.combine(m, n).changes.distinct --> { case (m, n) => reset(m, n) },
       cluesInput,
       Button(variant = "secondary")(
         onClick --> { _ => reset(m.now(), n.now()) },

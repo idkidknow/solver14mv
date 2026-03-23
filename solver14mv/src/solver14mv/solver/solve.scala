@@ -14,7 +14,7 @@ import scala.scalajs.js.Dynamic.literal as lit
 def solve[F[_]: Async](
     clues: Array[Array[Clue]],
     rules: Set[Rule],
-    mineCount: Int,
+    mineCount: Option[Int],
 ): Stream[F, SolveResult] = {
   val m = clues.length
   val n = clues.lift(0).map(_.length).getOrElse(0)
@@ -74,7 +74,7 @@ def solve[F[_]: Async](
     lit(
       m = m,
       n = n,
-      mine_count = mineCount,
+      mine_count = mineCount.getOrElse(-1),
     )
   )
   val _ = modelBase.addDznString(s"clues = $cluesDzn;\nrules = $rulesDzn;")

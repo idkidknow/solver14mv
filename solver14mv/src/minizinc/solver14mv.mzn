@@ -120,6 +120,6 @@ constraint forall(rule in rules)(
   else true endif
 );
 
-constraint mine_count > 0 -> total_mine_count_eq(m, n, mines, mine_count);
+constraint mine_count >= 0 -> total_mine_count_eq(m, n, mines, mine_count);
 
 solve satisfy;
