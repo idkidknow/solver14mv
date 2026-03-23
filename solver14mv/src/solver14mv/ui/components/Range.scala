@@ -6,9 +6,7 @@ import solver14mv.ui.components.primitive.Slider
 import scala.scalajs.js
 
 object Range {
-  trait Context {
-    def value: Var[Int]
-  }
+  final case class Context(value: Var[Int])
 
   def value(using ctx: Context): Var[Int] = ctx.value
 
@@ -20,9 +18,7 @@ object Range {
       default: Int,
   )(mods: ModFunction*): HtmlElement = {
     val valueVar = Var(default)
-    val ctx = new Context {
-      override def value: Var[Int] = valueVar
-    }
+    val ctx = Context(valueVar)
     val onValueChange: js.Function2[Int, js.Object, Unit] = (v, _) => {
       valueVar.set(v)
     }

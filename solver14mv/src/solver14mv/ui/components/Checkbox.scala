@@ -6,9 +6,7 @@ import solver14mv.ui.components.primitive.Checkbox as CheckboxPrimitive
 import scala.scalajs.js
 
 object Checkbox {
-  trait Context {
-    def checked: Var[Boolean]
-  }
+  final case class Context(checked: Var[Boolean])
 
   def checked(using ctx: Context): Var[Boolean] = ctx.checked
 
@@ -16,9 +14,7 @@ object Checkbox {
 
   def apply(default: Boolean = false)(mods: ModFunction*): HtmlElement = {
     val checkedVar = Var(default)
-    val ctx = new Context {
-      override def checked: Var[Boolean] = checkedVar
-    }
+    val ctx = Context(checkedVar)
     val onCheckedChange: js.Function2[Boolean, js.Object, Unit] = (c, _) => {
       checkedVar.set(c)
     }
