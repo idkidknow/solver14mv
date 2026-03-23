@@ -9,7 +9,7 @@ import scala.scalajs.js.annotation.JSImport
 
 object Slider {
   @js.native
-  @JSImport("@base-ui/react", "Slider")
+  @JSImport("@base-ui/react/slider", "Slider")
   object SliderRaw extends js.Object {
     val Root: js.Object = js.native
     val Control: js.Object = js.native

@@ -9,7 +9,7 @@ import scala.scalajs.js.annotation.JSImport
 
 object Checkbox {
   @js.native
-  @JSImport("@base-ui/react", "Checkbox")
+  @JSImport("@base-ui/react/checkbox", "Checkbox")
   object CheckboxRaw extends js.Object {
     val Root: js.Object = js.native
     val Indicator: js.Object = js.native
