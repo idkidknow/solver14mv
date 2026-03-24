@@ -65,13 +65,13 @@ object App {
         )
       ),
       Signal.combine(m, n).changes.distinct --> { case (m, n) => reset(m, n) },
+      RuleEditor(
+        RuleEditor.rules --> rules.writer
+      ),
       cluesInput,
       Button(variant = "secondary")(
         onClick --> { _ => reset(m.now(), n.now()) },
         "reset",
-      ),
-      RuleEditor(
-        _.rules --> rules.writer
       ),
       Button()(
         "solve",

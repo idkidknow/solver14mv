@@ -2,6 +2,8 @@ package solver14mv.ui
 
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Rule
+import solver14mv.ui.components.ToggleGroupItem
+import solver14mv.ui.components.ToggleGroup
 
 object RuleEditor {
 
@@ -9,7 +11,9 @@ object RuleEditor {
     def rules: Signal[Set[Rule]]
   }
 
-  type ModFunction = Context => Mod[HtmlElement]
+  def rules(using ctx: Context): Signal[Set[Rule]] = ctx.rules
+
+  type ModFunction = Context ?=> Mod[HtmlElement]
 
   def apply(mods: ModFunction*): HtmlElement = {
     val rulesVar = Var(Set.empty[Rule])
@@ -18,21 +22,16 @@ object RuleEditor {
         rulesVar.signal
     }
 
-    val elements = Rule.values.map { rule =>
-      div(
-        input(
-          typ("checkbox"),
-          onClick.mapToChecked --> rulesVar.updater[Boolean] { case (s, b) =>
-            if (b) s + rule else s - rule
-          },
-        ),
-        label(s"[${rule.code}]"),
-      )
+    val items = Rule.values.map { rule => (_: ToggleGroup.Context) ?=>
+      ToggleGroupItem(rule.productPrefix)(span(rule.code))
     }.toSeq
 
-    div(
-      elements,
-      mods.map(_(ctx)),
+    ToggleGroup(variant = "outline", size = "lg", multiple = true)(items*)(
+      ToggleGroup.value.signal --> rulesVar.writer.contramap[List[String]] {
+        strs =>
+          strs.map(Rule.valueOf(_)).toSet
+      },
+      mods.map(_(using ctx)),
     )
   }
 }
