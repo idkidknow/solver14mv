@@ -15,7 +15,7 @@ object RuleEditor {
 
   type ModFunction = Context ?=> Mod[HtmlElement]
 
-  def apply(mods: ModFunction*): HtmlElement = {
+  def apply(mods: ModFunction*): Mod[HtmlElement] = {
     val rulesVar = Var(Set.empty[Rule])
     val ctx = new Context {
       override def rules: Signal[Set[Rule]] =

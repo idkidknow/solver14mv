@@ -1,13 +1,13 @@
 package solver14mv.ui.components
 
 import com.raquo.laminar.api.L.*
-import japgolly.scalajs.react.CtorType
-import japgolly.scalajs.react.vdom.VdomNode
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import solver14mv.ui.components.primitive.Toggle.Toggle as TogglePrimitive
 
 import scala.scalajs.js
 
-class ToggleGroupItem(val inner: VdomNode)
+class ToggleGroupItem private (val inner: VdomNode)
 
 object ToggleGroupItem {
   private def className(
@@ -34,12 +34,12 @@ object ToggleGroupItem {
   def apply(
       value: String
   )(
-      children: HtmlElement*
+      children: Element*
   )(using groupCtx: ToggleGroup.Context): ToggleGroupItem = {
-    val childrenReact: Seq[CtorType.ChildArg] =
-      children.map(child => react.fromLaminar[Unit](_ => child)(()))
+    val childrenReact: Seq[VdomNode] =
+      children.map(child => react.Laminar[Unit](_ => child)(()))
 
-    val component = TogglePrimitive(
+    val component = TogglePrimitive.withKey(value)(
       js.Dynamic.literal(
         `data-slot` = "toggle-group-item",
         `data-variant` = groupCtx.variant,
