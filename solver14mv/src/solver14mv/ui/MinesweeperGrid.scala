@@ -3,6 +3,7 @@ package solver14mv.ui
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
 import solver14mv.solver.SolveResult.CellSafety
+
 import scala.scalajs.js
 
 object MinesweeperGrid {

@@ -67,7 +67,7 @@ object Range {
     }
 
     react
-      .wrap(render, valueVar.signal)
+      .wrapRoot(render, valueVar.signal)
       .amend(
         mods.map(_(using ctx))
       )

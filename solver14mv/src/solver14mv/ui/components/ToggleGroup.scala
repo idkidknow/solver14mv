@@ -2,6 +2,7 @@ package solver14mv.ui.components
 
 import com.raquo.laminar.api.L.*
 import solver14mv.ui.components.primitive.ToggleGroup.ToggleGroup as ToggleGroupPrimitive
+
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
@@ -53,7 +54,7 @@ object ToggleGroup {
     }
 
     react
-      .wrap(render, valueVar.signal)
+      .wrapRoot(render, valueVar.signal)
       .amend(mods.map(_(using ctx)))
   }
 }

@@ -1,8 +1,9 @@
 package solver14mv.ui
 
-import com.raquo.laminar.api.L.*
-import scala.scalajs.js
 import com.raquo.laminar.DomApi
+import com.raquo.laminar.api.L.*
+
+import scala.scalajs.js
 
 object Header {
   trait Styles {

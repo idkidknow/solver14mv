@@ -1,9 +1,9 @@
 package solver14mv.ui
 
 import com.raquo.laminar.api.L.*
+import solver14mv.ui.components.Checkbox
 import solver14mv.ui.components.Field
 import solver14mv.ui.components.Input
-import solver14mv.ui.components.Checkbox
 
 object BoardSettingsInput {
   trait Styles {

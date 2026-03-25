@@ -21,7 +21,13 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
   )
 
   def scalacOptions =
-    Seq("-Wunused:imports", "-Wall", "-deprecation", "-experimental")
+    Seq(
+      "-Wunused:imports",
+      "-Wall",
+      "-deprecation",
+      "-experimental",
+      "-feature",
+    )
 
   def moduleKind = ModuleKind.ESModule
 

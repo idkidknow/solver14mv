@@ -2,8 +2,8 @@ package solver14mv.ui
 
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Rule
-import solver14mv.ui.components.ToggleGroupItem
 import solver14mv.ui.components.ToggleGroup
+import solver14mv.ui.components.ToggleGroupItem
 
 object RuleEditor {
 

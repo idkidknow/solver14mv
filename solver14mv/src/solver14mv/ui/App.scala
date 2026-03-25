@@ -8,8 +8,8 @@ import solver14mv.solver
 import solver14mv.solver.Clue
 import solver14mv.solver.Rule
 import solver14mv.solver.SolveResult.CellSafety
-import solver14mv.ui.components.Button
 import solver14mv.ui.BoardSettingsInput.Settings
+import solver14mv.ui.components.Button
 
 object App {
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {

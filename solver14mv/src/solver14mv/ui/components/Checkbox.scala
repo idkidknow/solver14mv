@@ -39,7 +39,7 @@ object Checkbox {
     }
 
     react
-      .wrap(render, checkedVar.signal)
+      .wrapRoot(render, checkedVar.signal)
       .amend(
         mods.map(_(using ctx))
       )

@@ -1,8 +1,9 @@
 package solver14mv.macros
 
+import com.raquo.laminar.api.L
+
 import scala.quoted.*
 import scala.scalajs.js
-import com.raquo.laminar.api.L
 
 inline def moduleCSS[A](path: String, obj: js.Object): A = ${
   moduleCSSImpl[A]('path, 'obj)

@@ -1,8 +1,8 @@
 package solver14mv.ui.components
 
 import com.raquo.laminar.api.L.*
-import org.scalajs.dom
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.scalajs.dom
 
 object Button {
   type Variant = "default" | "outline" | "ghost" | "destructive" | "secondary" |

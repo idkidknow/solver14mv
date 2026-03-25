@@ -8,10 +8,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import org.scalajs.dom
 
 object react {
-  def wrap[A: Renderable, P](
+  def wrapRoot[A: Renderable, P](
       aFn: P => A,
       props: L.Signal[P],
-  ): L.HtmlElement = {
+  ): L.Div = {
     import L.*
     var root = Option.empty[ReactRoot]
     div(
@@ -44,8 +44,10 @@ object react {
       def update(p: P) = propsVar.set(p)
       def unmount() = lRoot.unmount()
     }
+
     ScalaComponent
       .builder[P]
+      .stateless
       .backend(new Backend(_))
       .render(_.backend.render())
       .componentDidMount(_.backend.mount())

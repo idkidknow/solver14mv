@@ -1,11 +1,11 @@
 package solver14mv.ui.components
 
 import com.raquo.laminar.api.L.*
+import japgolly.scalajs.react.CtorType
+import japgolly.scalajs.react.vdom.VdomNode
 import solver14mv.ui.components.primitive.Toggle.Toggle as TogglePrimitive
 
 import scala.scalajs.js
-import japgolly.scalajs.react.CtorType
-import japgolly.scalajs.react.vdom.VdomNode
 
 class ToggleGroupItem(val inner: VdomNode)
 
