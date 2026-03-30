@@ -24,6 +24,7 @@ object ToggleGroup {
   type ItemFunction = Context ?=> ToggleGroupItem
   type ModFunction = Context ?=> Mod[HtmlElement]
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.defaultArgs"))
   def apply(
       variant: "default" | "outline" = "default",
       size: "default" | "sm" | "lg" = "default",

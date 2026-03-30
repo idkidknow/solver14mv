@@ -16,6 +16,7 @@ object Checkbox {
 
   type ModFunction = Context ?=> Mod[HtmlElement]
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.defaultArgs"))
   def apply(default: Boolean = false)(mods: ModFunction*): Mod[HtmlElement] = {
     val checkedVar = Var(default)
     val ctx = Context(checkedVar)

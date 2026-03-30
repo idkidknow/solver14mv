@@ -9,6 +9,7 @@ inline def moduleCSS[A](path: String, obj: js.Object): A = ${
   moduleCSSImpl[A]('path, 'obj)
 }
 
+@SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
 def moduleCSSImpl[A: Type](path: Expr[String], obj: Expr[js.Object])(using
     Quotes
 ): Expr[A] = {
@@ -43,7 +44,7 @@ def moduleCSSImpl[A: Type](path: Expr[String], obj: Expr[js.Object])(using
         .asInstanceOf[js.Dynamic]
         .selectDynamic($name)
         .asInstanceOf
-      if (js.`import`.meta.hot != null) {
+      if (js.`import`.meta.hot != null) { // scalafix:ok
         val varStr = L.Var(str)
         val _ = js.`import`.meta.hot.accept(
           $path.asInstanceOf,

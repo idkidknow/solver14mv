@@ -44,6 +44,7 @@ object Button {
     cn(s"$base $v $s")
   }
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.defaultArgs"))
   def apply(
       variant: Variant = "default",
       size: Size = "default",

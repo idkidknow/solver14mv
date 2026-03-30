@@ -22,6 +22,7 @@ object Field {
   }
 
   object Legend {
+    @SuppressWarnings(Array("scalafix:DisableSyntax.defaultArgs"))
     def apply(variant: "legend" | "label" = "legend")(
         mods: Mod[ReactiveHtmlElement[dom.HTMLLegendElement]]*
     ): HtmlElement = {
@@ -69,6 +70,7 @@ object Field {
     cn(s"$base $o")
   }
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.defaultArgs"))
   def apply(orientation: "vertical" | "horizontal" | "responsive" = "vertical")(
       mods: Mod[ReactiveHtmlElement[dom.HTMLDivElement]]*
   ): HtmlElement = {
