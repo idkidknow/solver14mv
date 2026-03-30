@@ -20,7 +20,7 @@ object Checkbox {
   val CheckIconRaw: js.Object = js.native
 
   val Root =
-    JsForwardRef[js.Object, Children.Varargs, dom.html.Element](
+    JsForwardRef[js.Object, Children.Varargs, dom.html.Span](
       CheckboxRaw.Root
     )
 

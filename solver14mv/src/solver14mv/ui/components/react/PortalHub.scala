@@ -21,17 +21,32 @@ trait PortalHub extends L.SignalSource[Map[PortalKey, PortalProps]] {
 object PortalHub {
   type PortalKey = String
 
-  /** @param child
-   *    Signal of VdomNode which renders only one node in real DOM, accepting
-   *    the ref
-   *  @param ref
-   *    emit the ref when in useLayoutEffect
-   */
-  final case class PortalProps(
-      child: L.Signal[Ref.ToVdom[dom.Element] => VdomNode],
-      container: dom.Element,
-      ref: L.Sink[dom.Element],
-  )
+  enum PortalProps {
+
+    /** No children in real DOM */
+    case None(container: dom.Element, node: L.Signal[VdomNode])
+
+    /** Exactly one child in real DOM */
+    case One(
+        container: dom.Element,
+        node: L.Signal[Ref.ToVdom[dom.Element] => VdomNode],
+        ref: L.Sink[dom.Element],
+    )
+
+    /** Fixed number of children in real DOM */
+    case Multiple(
+        container: dom.Element,
+        count: Int,
+        node: L.Signal[PortalProps.MultipleRefSetter => VdomNode],
+        ref: L.Sink[IArray[Option[dom.Element]]],
+    )
+  }
+
+  object PortalProps {
+    trait MultipleRefSetter {
+      def set(idx: Int, elem: dom.Element): Unit
+    }
+  }
 
   def apply(): PortalHub = {
     val portals = L.Var(Map.empty[PortalKey, PortalProps])
@@ -50,12 +65,33 @@ object PortalHub {
     }
   }
 
-  def portalDest(
+  def portalBind(
+      hub: PortalHub,
+      vdomChild: L.Signal[VdomNode],
+  ): L.Mod[L.Element] = {
+    import L.*
+    modSeq(
+      onMountUnmountCallbackWithState(
+        mount = mountCtx => {
+          val container = mountCtx.thisNode.ref
+          val key = hub.createPortal(
+            PortalProps.None(container, vdomChild)
+          )
+          key
+        },
+        unmount = (_, keyOpt) => {
+          keyOpt.foreach(key => hub.removePortal(key))
+        },
+      )
+    )
+  }
+
+  def portalOne(
       hub: PortalHub,
       vdomChild: L.Signal[Ref.ToVdom[dom.Element] => VdomNode],
   ): L.Mod[L.Element] = {
     import L.*
-    val childBus: EventBus[dom.Element] = EventBus[dom.Element]()
+    val childBus: EventBus[dom.Element] = EventBus()
     val childStream: EventStream[Element] = childBus.stream.map {
       case elem: dom.HTMLElement => foreignHtmlElement(elem)
       case elem: dom.SVGElement => foreignSvgElement(elem)
@@ -66,7 +102,9 @@ object PortalHub {
         mount = mountCtx => {
           val container = mountCtx.thisNode.ref
           val ref: Sink[dom.Element] = childBus.writer
-          val key = hub.createPortal(PortalProps(vdomChild, container, ref))
+          val key = hub.createPortal(
+            PortalProps.One(container, vdomChild, ref)
+          )
           key
         },
         unmount = (_, keyOpt) => {
@@ -76,15 +114,66 @@ object PortalHub {
     )
   }
 
-  extension (hub: PortalHub) {
-    def dest(
-        vdomChild: L.Signal[Ref.ToVdom[dom.Element] => VdomNode]
-    ): L.Mod[L.Element] = portalDest(hub, vdomChild)
+  def portalMultiple(
+      hub: PortalHub,
+      count: Int,
+      vdomChild: L.Signal[PortalProps.MultipleRefSetter => VdomNode],
+  ): L.Mod[L.Element] = {
+    import L.*
+    val childrenBus: EventBus[IArray[Option[dom.Element]]] = EventBus()
+    val childMods = Seq.tabulate(count) { i =>
+      child <-- childrenBus.stream.map(_.apply(i)).distinct.map {
+        case Some(elem: dom.HTMLElement) => foreignHtmlElement(elem)
+        case Some(elem: dom.SVGElement) => foreignSvgElement(elem)
+        case _ => emptyNode
+      }
+    }
+    modSeq(
+      childMods,
+      onMountUnmountCallbackWithState(
+        mount = mountCtx => {
+          val container = mountCtx.thisNode.ref
+          val ref: Sink[IArray[Option[dom.Element]]] = childrenBus.writer
+          val key = hub.createPortal(
+            PortalProps.Multiple(container, count, vdomChild, ref)
+          )
+          key
+        },
+        unmount = (_, keyOpt) => {
+          keyOpt.foreach(key => hub.removePortal(key))
+        },
+      ),
+    )
   }
 
   /** React Component that instantiates portals */
   val Backend = ScalaFnComponent[PortalHub] { hub =>
-    val Portal = ScalaFnComponent[PortalProps] { props =>
+    val PortalNone = ScalaFnComponent[PortalProps.None] { props =>
+      for {
+        owner <- useRef(Option.empty[ManualOwner])
+        child <- useState(
+          VdomNode(null)
+        ) // scalafix:ok DisableSyntax.null; VdomNode(null) is valid
+        _ <- useLayoutEffectOnMount {
+          val mount: SyncIO[Unit] = for {
+            _ <- owner.set(Some(ManualOwner()))
+            _ <- SyncIO {
+              given L.Owner = owner.value.get
+              val _ = props.node.addObserver(L.Observer { newChild =>
+                child.setState(newChild).unsafeRunSync()
+              })
+            }
+          } yield ()
+          val unmount: SyncIO[Unit] =
+            owner.foreach(_.foreach(_.killSubscriptions()))
+          mount.map(_ => unmount)
+        }
+      } yield {
+        ReactPortal(child.value.rawNode, props.container)
+      }
+    }
+
+    val PortalOne = ScalaFnComponent[PortalProps.One] { props =>
       for {
         owner <- useRef(Option.empty[ManualOwner])
         child <- useState(
@@ -97,7 +186,7 @@ object PortalHub {
             _ <- owner.set(Some(ManualOwner()))
             _ <- SyncIO {
               given L.Owner = owner.value.get
-              val _ = props.child.addObserver(L.Observer { childFn =>
+              val _ = props.node.addObserver(L.Observer { childFn =>
                 child.setState(childFn(ref)).unsafeRunSync()
               })
             }
@@ -111,6 +200,41 @@ object PortalHub {
             prevRef.value = elem
             props.ref.toObserver.onNext(elem)
           }
+        })
+      } yield {
+        ReactPortal(child.value.rawNode, props.container)
+      }
+    }
+
+    val PortalMultiple = ScalaFnComponent[PortalProps.Multiple] { props =>
+      for {
+        owner <- useRef(Option.empty[ManualOwner])
+        child <- useState(
+          VdomNode(null)
+        ) // scalafix:ok DisableSyntax.null; VdomNode(null) is valid
+        refs <- useRef(Map.empty[Int, dom.Element])
+        _ <- useLayoutEffectOnMount {
+          val mount: SyncIO[Unit] = for {
+            _ <- owner.set(Some(ManualOwner()))
+            _ <- SyncIO {
+              val setter: PortalProps.MultipleRefSetter = (idx, elem) => {
+                refs.mod(_.updated(idx, elem)).unsafeRunSync()
+              }
+              given L.Owner = owner.value.get
+              val _ = props.node.addObserver(L.Observer { childFn =>
+                child.setState(childFn(setter)).unsafeRunSync()
+              })
+            }
+          } yield ()
+          val unmount: SyncIO[Unit] =
+            owner.foreach(_.foreach(_.killSubscriptions()))
+          mount.map(_ => unmount)
+        }
+        _ <- useLayoutEffect(refs.foreach { elems =>
+          val arr = IArray.tabulate(props.count) { i =>
+            elems.get(i)
+          }
+          props.ref.toObserver.onNext(arr)
         })
       } yield {
         ReactPortal(child.value.rawNode, props.container)
@@ -136,7 +260,14 @@ object PortalHub {
       }
     } yield {
       portals.value.map { case (key, props) =>
-        Portal.withKey(key).apply(props)
+        props match {
+          case props: PortalProps.None =>
+            PortalNone.withKey(key).apply(props)
+          case props: PortalProps.One =>
+            PortalOne.withKey(key).apply(props)
+          case props: PortalProps.Multiple =>
+            PortalMultiple.withKey(key).apply(props)
+        }
       }.toReactFragment
     }
   }
@@ -150,8 +281,17 @@ object PortalHub {
     hub
   }
 
-  def globalDest(
+  def globalPortalBind(
+      vdomChild: L.Signal[VdomNode]
+  ): L.Mod[L.Element] = portalBind(global, vdomChild)
+
+  def globalPortalOne(
       vdomChild: L.Signal[Ref.ToVdom[dom.Element] => VdomNode]
-  ): L.Mod[L.Element] = portalDest(global, vdomChild)
+  ): L.Mod[L.Element] = portalOne(global, vdomChild)
+
+  def globalPortalMultiple(
+      count: Int,
+      vdomChild: L.Signal[PortalProps.MultipleRefSetter => VdomNode],
+  ): L.Mod[L.Element] = portalMultiple(global, count, vdomChild)
 
 }

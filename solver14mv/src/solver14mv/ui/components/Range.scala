@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import japgolly.scalajs.react.*
 import org.scalajs.dom
 import solver14mv.ui.components.primitive.Slider
-import solver14mv.ui.components.react.PortalHub.globalDest
+import solver14mv.ui.components.react.PortalHub.globalPortalOne
 
 import scala.scalajs.js
 
@@ -72,7 +72,7 @@ object Range {
     }
 
     modSeq(
-      globalDest(valueVar.signal.mapLazy { value => ref =>
+      globalPortalOne(valueVar.signal.mapLazy { value => ref =>
         render(value, ref)
       }),
       mods.map(_(using ctx)),

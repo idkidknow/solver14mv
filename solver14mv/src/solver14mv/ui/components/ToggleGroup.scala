@@ -7,7 +7,7 @@ import japgolly.scalajs.react.vdom.Implicits.*
 import org.scalajs.dom
 import solver14mv.ui.components.primitive.Toggle.Toggle as TogglePrimitive
 import solver14mv.ui.components.primitive.ToggleGroup.ToggleGroup as ToggleGroupPrimitive
-import solver14mv.ui.components.react.PortalHub.globalDest
+import solver14mv.ui.components.react.PortalHub.globalPortalOne
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
@@ -64,7 +64,7 @@ object ToggleGroup {
     }
 
     modSeq(
-      globalDest(valueVar.signal.mapLazy { value => ref =>
+      globalPortalOne(valueVar.signal.mapLazy { value => ref =>
         render(value, ref)
       }),
       mods.map(_(using ctx)),
@@ -103,7 +103,7 @@ object ToggleGroup {
       val childrenReact: Seq[VdomNode] =
         children.map(child => react.Laminar[Unit](_ => child)(()))
 
-      val component = TogglePrimitive.withKey(value)(
+      val vdomNode = TogglePrimitive.withKey(value)(
         js.Dynamic.literal(
           `data-slot` = "toggle-group-item",
           `data-variant` = groupCtx.variant,
@@ -113,7 +113,7 @@ object ToggleGroup {
           value = value,
         )
       )(childrenReact*)
-      new Item(component)
+      new Item(vdomNode)
     }
   }
 }
