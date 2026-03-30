@@ -22,7 +22,7 @@ object RuleEditor {
     }
 
     val items = Rule.values.map { rule => (_: ToggleGroup.Context) ?=>
-      ToggleGroup.Item(rule.productPrefix)(span(rule.code))
+      ToggleGroup.Item(rule.productPrefix)(rule.code)(rule.productPrefix)
     }.toSeq
 
     ToggleGroup(variant = "outline", size = "lg", multiple = true)(items*)(

@@ -10,6 +10,7 @@ import solver14mv.ui.components.primitive.ToggleGroup.ToggleGroup as ToggleGroup
 import solver14mv.ui.components.react.PortalHub.globalPortalOne
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.literal as lit
 import scala.scalajs.js.JSConverters.*
 
 object ToggleGroup {
@@ -44,23 +45,25 @@ object ToggleGroup {
       }
     val itemArr = items.map(_(using ctx).inner).toVdomArray
     def render(value: List[String], ref: Ref.ToVdom[dom.Element]) = {
-      ToggleGroupPrimitive
-        .withRef(ref)
-        .apply(
-          js.Dynamic.literal(
-            `data-slot` = "toggle-group",
-            `data-variant` = variant,
-            `data-spacing` = spacing,
-            `data-orientation` = orientation,
-            style = js.Dynamic.literal(`--gap` = spacing),
-            className = cn(
-              "rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] data-vertical:flex-col data-vertical:items-stretch"
-            ),
-            multiple = multiple,
-            value = value.toJSArray,
-            onValueChange = onValueChange,
-          )
-        )(itemArr)
+      primitive.Tooltip.Provider(lit(delay = 500))(
+        ToggleGroupPrimitive
+          .withRef(ref)
+          .apply(
+            js.Dynamic.literal(
+              `data-slot` = "toggle-group",
+              `data-variant` = variant,
+              `data-spacing` = spacing,
+              `data-orientation` = orientation,
+              style = js.Dynamic.literal(`--gap` = spacing),
+              className = cn(
+                "rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] data-vertical:flex-col data-vertical:items-stretch"
+              ),
+              multiple = multiple,
+              value = value.toJSArray,
+              onValueChange = onValueChange,
+            )
+          )(itemArr)
+      )
     }
 
     modSeq(
@@ -97,14 +100,9 @@ object ToggleGroup {
 
     def apply(
         value: String
-    )(
-        children: Element*
-    )(using groupCtx: Context): Item = {
-      val childrenReact: Seq[VdomNode] =
-        children.map(child => react.Laminar[Unit](_ => child)(()))
-
-      val vdomNode = TogglePrimitive.withKey(value)(
-        js.Dynamic.literal(
+    )(text: String)(tip: String)(using groupCtx: Context): Item = {
+      val trigger = TogglePrimitive(
+        lit(
           `data-slot` = "toggle-group-item",
           `data-variant` = groupCtx.variant,
           `data-size` = groupCtx.size,
@@ -112,8 +110,10 @@ object ToggleGroup {
           className = className(groupCtx.variant, groupCtx.size),
           value = value,
         )
-      )(childrenReact*)
-      new Item(vdomNode)
+      )(text)
+      new Item(
+        Tooltip.Component.withKey(value)(Tooltip.Props(trigger, "top", tip))
+      )
     }
   }
 }
