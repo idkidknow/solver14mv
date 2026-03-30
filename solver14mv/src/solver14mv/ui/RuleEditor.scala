@@ -3,7 +3,6 @@ package solver14mv.ui
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Rule
 import solver14mv.ui.components.ToggleGroup
-import solver14mv.ui.components.ToggleGroupItem
 
 object RuleEditor {
 
@@ -23,7 +22,7 @@ object RuleEditor {
     }
 
     val items = Rule.values.map { rule => (_: ToggleGroup.Context) ?=>
-      ToggleGroupItem(rule.productPrefix)(span(rule.code))
+      ToggleGroup.Item(rule.productPrefix)(span(rule.code))
     }.toSeq
 
     ToggleGroup(variant = "outline", size = "lg", multiple = true)(items*)(
