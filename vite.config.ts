@@ -11,4 +11,9 @@ export default defineConfig({
       "@src": path.resolve(__dirname, "./solver14mv/src"),
     },
   },
+  server: {
+    watch: {
+      ignored: ["**/*.scala"],
+    },
+  },
 });
