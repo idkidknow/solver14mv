@@ -9,7 +9,7 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import mill.api.Task.Simple
 
 object solver14mv extends ScalaJSModule with ScalafixModule {
-  def scalaVersion = "3.7.4"
+  def scalaVersion = "3.8.3"
   def scalaJSVersion = "1.20.2"
 
   def mvnDeps = Seq(
