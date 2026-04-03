@@ -21,9 +21,11 @@ object App {
     val rules = Var(Set.empty[Rule])
 
     val miniZincInitialized = Var(false)
-    val initMiniZinc: IO[Unit] =
-      solver.minizinc.raw.init[IO] *> IO.delay(miniZincInitialized.set(true))
-    dispatcher.unsafeRunAndForget(initMiniZinc)
+    val initMiniZinc: Mod[Element] = {
+      val io: IO[Unit] =
+        solver.minizinc.raw.init[IO] *> IO.delay(miniZincInitialized.set(true))
+      onMountCallback { _ => dispatcher.unsafeRunAndForget(io) }
+    }
 
     val runningSolverCancel: Var[Option[IO[Unit]]] = Var(None)
     def stopSolver(): Unit = {
@@ -56,6 +58,7 @@ object App {
       ),
     )
     div(
+      initMiniZinc,
       Header(),
       BoardSettingsInput(
         BoardSettingsInput.settings --> Observer.combine(
