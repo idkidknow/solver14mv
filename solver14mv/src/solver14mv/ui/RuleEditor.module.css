@@ -1,0 +1,75 @@
+.root {
+  display: flex;
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::before,
+  &::after {
+    content: "";
+    display: block;
+    position: sticky;
+    top: 0;
+    bottom: 0;
+    width: 3rem;
+    flex-shrink: 0;
+    pointer-events: none;
+    z-index: 11;
+  }
+
+  &::before {
+    left: 0;
+    margin-right: -3rem;
+    background-image: linear-gradient(to right, var(--background), transparent);
+    opacity: 0;
+  }
+
+  &::after {
+    right: 0;
+    margin-left: -3rem;
+    background-image: linear-gradient(to left, var(--background), transparent);
+    opacity: 0;
+    animation: shadow-right linear;
+    animation-timeline: scroll(inline);
+  }
+}
+
+@supports (animation-timeline: scroll(inline)) {
+  .root::before {
+    animation: shadow-left linear;
+    animation-timeline: scroll(inline);
+  }
+  .root::after {
+    animation: shadow-right linear;
+    animation-timeline: scroll(inline);
+  }
+}
+
+.content {
+  flex: 1 0 auto;
+}
+
+@keyframes shadow-left {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes shadow-right {
+  0% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
