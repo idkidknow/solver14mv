@@ -16,8 +16,12 @@ object App {
     val m = Var(8)
     val n = Var(8)
     val mineCount = Var(Option(26))
-    val clues: Var[Grid] = Var(Array.fill(m.now(), n.now())(Clue.None))
-    val cellSafety: Var[Map[(Int, Int), CellSafety]] = Var(Map.empty)
+    val clues: Var[Array[Array[Clue]]] = Var(
+      Array.fill(m.now(), n.now())(Clue.None)
+    )
+    val cellSafety: Var[Array[Array[CellSafety]]] = Var(
+      Array.fill(m.now(), n.now())(CellSafety.Indeterminate)
+    )
     val rules = Var(Set.empty[Rule])
 
     val miniZincInitialized = Var(false)
@@ -38,7 +42,7 @@ object App {
     def reset(m: Int, n: Int): Unit = {
       stopSolver()
       clues.set(Array.fill(m, n)(Clue.None))
-      cellSafety.set(Map.empty)
+      cellSafety.set(Array.fill(m, n)(CellSafety.Indeterminate))
     }
 
     val clueBrush = Var(Clue.None)
@@ -46,15 +50,14 @@ object App {
       ClueBrushEditor(
         _.clueBrush --> clueBrush
       ),
-      MinesweeperGrid(
-        clues.signal,
-        cellSafety.signal,
-        _.onClick --> clues.updater[(Int, Int)] { case (grid, (i, j)) =>
-          grid.updated(
-            i,
-            grid(i).updated(j, clueBrush.now()),
-          )
-        },
+      MinesweeperGrid(clues.signal, cellSafety.signal)(
+        MinesweeperGrid.onClick --> clues.updater[(Int, Int)] {
+          case (grid, (i, j)) =>
+            grid.updated(
+              i,
+              grid(i).updated(j, clueBrush.now()),
+            )
+        }
       ),
     )
     div(
@@ -83,9 +86,12 @@ object App {
             .solve[IO](clues.now(), rules.now(), mineCount.now())
             .foreach { result =>
               IO.delay {
-                cellSafety.update(
-                  _.updated((result.i, result.j), result.safety)
-                )
+                cellSafety.update { prev =>
+                  prev.updated(
+                    result.i,
+                    prev(result.i).updated(result.j, result.safety),
+                  )
+                }
               }
             }
             .compile

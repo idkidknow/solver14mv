@@ -1,4 +1,180 @@
+.root {
+  background-color: var(--primary);
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  gap: 2px;
+  padding: 2px;
+  border-radius: 1rem;
+  max-width: 40rem;
+}
+
 .btn {
-  min-width: 4rem;
-  min-height: 4rem;
+  aspect-ratio: 1;
+  background-color: var(--background);
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  color: var(--primary);
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background-color: var(--muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  &:active {
+    background-color: var(--accent);
+  }
+}
+
+.btn[data-safety="1"] {
+  background-color: #779977;
+}
+
+.btn[data-safety="-1"] {
+  background-color: #aa4477;
+}
+
+.topLeft {
+  border-top-left-radius: 0.8rem;
+}
+
+.topRight {
+  border-top-right-radius: 0.8rem;
+}
+
+.bottomLeft {
+  border-bottom-left-radius: 0.8rem;
+}
+
+.bottomRight {
+  border-bottom-right-radius: 0.8rem;
+}
+
+.str {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+  & > span {
+    font-size: 40cqh;
+  }
+}
+
+.withAnnotation {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  container-type: size;
+  & > span:first-child {
+    font-size: 40cqh;
+  }
+  & > span:last-child {
+    position: absolute;
+    font-size: 0.875rem;
+    right: 0.2rem;
+    bottom: 0;
+  }
+}
+
+@container (width < 3em) {
+  .withAnnotation > span:last-child {
+    font-size: 30cqh;
+    font-weight: 500;
+  }
+}
+
+.wall {
+  flex: 1;
+  padding: 0.2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  container-type: size;
+  position: relative;
+  & > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: -0.2rem 0;
+    font-size: calc((100cqh - 0.4rem) / 2.7);
+  }
+  & > span[data-content="0"] {
+    opacity: 0;
+  }
+  & > div {
+    position: absolute;
+    font-size: 0.75rem;
+    right: 0.2rem;
+    bottom: 0;
+  }
+  & > div:nth-child(5):last-child {
+    display: none;
+  }
+}
+
+@container (width < 3em) {
+  .wall > span {
+    font-weight: bold;
+  }
+}
+
+.withHorizontalArrow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  container-type: size;
+  & > span {
+    font-size: 40cqh;
+  }
+  & > svg {
+    position: absolute;
+    right: 0.1rem;
+    bottom: -0.1rem;
+    width: 1rem;
+  }
+}
+
+@container (width < 3em) {
+  .withHorizontalArrow > svg {
+    width: 34cqh;
+    bottom: -8cqh;
+  }
+}
+
+.withVerticalArrow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  container-type: size;
+  & > span {
+    font-size: 40cqh;
+  }
+  & > svg {
+    position: absolute;
+    right: 0.1rem;
+    bottom: 0;
+    width: 1rem;
+  }
+}
+
+@container (width < 3em) {
+  .withVerticalArrow > svg {
+    width: 34cqh;
+    bottom: -5cqh;
+  }
 }
