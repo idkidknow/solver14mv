@@ -1,0 +1,76 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 4rem;
+
+  & > div {
+    color: var(--muted-foreground);
+    text-align: center;
+    font-size: 0.875rem;
+  }
+
+  & > button {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.33rem;
+    background-color: var(--secondary);
+    border-radius: 0.75rem;
+    color: var(--foreground);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      background-color: var(--muted);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: -2px;
+    }
+
+    &:active {
+      background-color: var(--accent);
+    }
+  }
+
+  button[data-active="1"] {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+.item1Btn {
+  & > input {
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    outline: none;
+    font-size: 1.33rem;
+    cursor: pointer;
+  }
+}
+
+.wallBtn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+
+  & > input {
+    width: 2rem;
+    height: 2rem;
+    outline: none;
+    text-align: center;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+}
