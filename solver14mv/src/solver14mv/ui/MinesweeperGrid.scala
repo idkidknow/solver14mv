@@ -12,6 +12,7 @@ import scala.scalajs.js
 object MinesweeperGrid {
   trait Styles {
     val root: StrictSignal[String]
+    val row: StrictSignal[String]
     val btn: StrictSignal[String]
     val topLeft: StrictSignal[String]
     val topRight: StrictSignal[String]
@@ -73,6 +74,126 @@ object MinesweeperGrid {
     }
   }
 
+  private def cellButton(
+      m: Int,
+      n: Int,
+      i: Int,
+      j: Int,
+      signal: Signal[(model: ClueViewModel, safety: CellSafety)],
+      isCurrent: (Int, Int) => Signal[Boolean],
+      setCurrent: (Int, Int) => Unit,
+      onClickObserver: Observer[(Int, Int)],
+  ): Button = {
+    import ClueViewModel.*
+    val content = signal
+      .map(_.model)
+      .splitMatchOne
+      .handleType[Str] { case (_, signal) =>
+        div(cls <-- styles.str, span(text <-- signal.map(_.str)))
+      }
+      .handleType[WithAnnotation] { case (_, signal) =>
+        div(
+          cls <-- styles.withAnnotation,
+          span(text <-- signal.map(_.str)),
+          span(text <-- signal.map(_.annotation)),
+        )
+      }
+      .handleType[Wall] { case (_, signal) =>
+        div(
+          cls <-- styles.wall,
+          children <-- signal.map(_.strs.padTo(3, "0")).splitByIndex {
+            case (_, _, signal) =>
+              span(text <-- signal, dataAttr("content") <-- signal)
+          },
+          div("W"),
+        )
+      }
+      .handleType[WithHorizontalArrow] { case (_, signal) =>
+        div(
+          cls <-- styles.withHorizontalArrow,
+          span(text <-- signal.map { case WithHorizontalArrow(str) =>
+            str
+          }),
+          foreignSvgElement(
+            DomApi.unsafeParseSvgString(
+              """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="24" height="24" fill="currentColor" style="opacity:1;"><path  d="M10.182 4.682a.45.45 0 0 1 .566-.058l.07.058l2.5 2.5l.058.07a.45.45 0 0 1 0 .496l-.058.07l-2.5 2.5a.45.45 0 0 1-.636-.636l1.731-1.732H3.087l1.731 1.732l.058.07a.451.451 0 0 1-.624.624l-.07-.058l-2.5-2.5a.45.45 0 0 1 0-.636l2.5-2.5l.07-.058a.45.45 0 0 1 .624.624l-.058.07L3.087 7.05h8.826l-1.731-1.732l-.058-.07a.45.45 0 0 1 .058-.566"/></svg>"""
+            )
+          ),
+        )
+      }
+      .handleType[WithVerticalArrow] { case (_, signal) =>
+        div(
+          cls <-- styles.withVerticalArrow,
+          span(text <-- signal.map { case WithVerticalArrow(str) =>
+            str
+          }),
+          foreignSvgElement(
+            DomApi.unsafeParseSvgString(
+              """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="24" height="24" fill="currentColor" style="opacity:1;"><path  d="M7.252 1.624a.45.45 0 0 1 .566.058l2.5 2.5l.058.07a.45.45 0 0 1-.624.624l-.07-.057L7.95 3.087v8.826l1.731-1.731a.45.45 0 0 1 .637.637l-2.5 2.5a.45.45 0 0 1-.637 0l-2.5-2.5l-.057-.07a.45.45 0 0 1 .624-.625l.07.058l1.732 1.731V3.087L5.318 4.82a.45.45 0 0 1-.637-.637l2.5-2.5z"/></svg>"""
+            )
+          ),
+        )
+      }
+      .toSignal
+
+    val clsSignal =
+      if (i === 0 && j === 0)
+        Signal
+          .combine(styles.btn, styles.topLeft)
+          .map((s1, s2) => List(s1, s2))
+      else if (i === 0 && j === n - 1)
+        Signal
+          .combine(styles.btn, styles.topRight)
+          .map((s1, s2) => List(s1, s2))
+      else if (i === m - 1 && j === 0)
+        Signal
+          .combine(styles.btn, styles.bottomLeft)
+          .map((s1, s2) => List(s1, s2))
+      else if (i === m - 1 && j === n - 1)
+        Signal
+          .combine(styles.btn, styles.bottomRight)
+          .map((s1, s2) => List(s1, s2))
+      else styles.btn.map(List(_))
+
+    button(
+      role("gridcell"),
+      cls <-- clsSignal,
+      child <-- content,
+      dataAttr("safety") <-- signal.map(_.safety match {
+        case CellSafety.Indeterminate => "0"
+        case CellSafety.Safe => "1"
+        case CellSafety.Mine => "-1"
+      }),
+      tabIndex <-- isCurrent(i, j).map(if (_) 0 else -1),
+      focus <-- isCurrent(i, j).changes,
+      onFocus --> { _ => setCurrent(i, j) },
+      onKeyDown --> { e =>
+        e.key match {
+          case "ArrowLeft" =>
+            e.preventDefault()
+            setCurrent(i, (j - 1 + n) % n)
+          case "ArrowRight" =>
+            e.preventDefault()
+            setCurrent(i, (j + 1) % n)
+          case "ArrowUp" =>
+            e.preventDefault()
+            setCurrent((i - 1 + m) % m, j)
+          case "ArrowDown" =>
+            e.preventDefault()
+            setCurrent((i + 1) % m, j)
+          case "Home" =>
+            e.preventDefault()
+            setCurrent(if (e.ctrlKey) 0 else i, 0)
+          case "End" =>
+            e.preventDefault()
+            setCurrent(if (e.ctrlKey) m - 1 else i, n - 1)
+          case _ =>
+        }
+      },
+      L.onClick.mapTo((i, j)) --> onClickObserver,
+    )
+  }
+
   def apply(
       clues: Signal[Array[Array[Clue]]],
       cellSafety: Signal[Array[Array[CellSafety]]],
@@ -89,106 +210,37 @@ object MinesweeperGrid {
           .map((clueRow, cellSafetyRow) => clueRow.zip(cellSafetyRow))
       }
 
-    val buttons = gridSignal
+    val currentCell = Var((0, 0))
+    def isCurrentSignal(i: Int, j: Int): Signal[Boolean] =
+      currentCell.signal.map(_ === (i, j)).distinct
+
+    val buttonRows = gridSignal
       .map { grid =>
         val m = grid.length
         val n = grid.lift(0).map(_.length).getOrElse(0)
-        grid.zipWithIndex.flatMap { case (arr, i) =>
-          arr.zipWithIndex.map { case ((clue, cellSafety), j) =>
-            (
-              m = m,
-              n = n,
-              i = i,
-              j = j,
-              model = ClueViewModel.fromClue(clue),
-              safety = cellSafety,
-            )
-          }
-        }.toSeq
+        (m, n)
       }
-      .split((m, n, i, j, _, _) => (m, n, i, j)) {
-        case ((m, n, i, j), _, signal) =>
-          import ClueViewModel.*
-          val content = signal
-            .map(_.model)
-            .splitMatchOne
-            .handleType[Str] { case (_, signal) =>
-              div(cls <-- styles.str, span(text <-- signal.map(_.str)))
-            }
-            .handleType[WithAnnotation] { case (_, signal) =>
-              div(
-                cls <-- styles.withAnnotation,
-                span(text <-- signal.map(_.str)),
-                span(text <-- signal.map(_.annotation)),
+      .distinct
+      .flatMapSwitch { case (m, n) =>
+        gridSignal.map(_.toSeq).splitByIndex { case (i, _, rowSignal) =>
+          val cells =
+            rowSignal.map(_.toSeq).splitByIndex { case (j, _, signal) =>
+              val signal1 = signal.map { case (clue, safety) =>
+                (model = ClueViewModel.fromClue(clue), safety = safety)
+              }
+              cellButton(
+                m,
+                n,
+                i,
+                j,
+                signal1,
+                isCurrentSignal,
+                (i, j) => currentCell.set((i, j)),
+                onClickBus.writer,
               )
             }
-            .handleType[Wall] { case (_, signal) =>
-              div(
-                cls <-- styles.wall,
-                children <-- signal.map(_.strs.padTo(3, "0")).splitByIndex {
-                  case (_, _, signal) =>
-                    span(text <-- signal, dataAttr("content") <-- signal)
-                },
-                div("W"),
-              )
-            }
-            .handleType[WithHorizontalArrow] { case (_, signal) =>
-              div(
-                cls <-- styles.withHorizontalArrow,
-                span(text <-- signal.map { case WithHorizontalArrow(str) =>
-                  str
-                }),
-                foreignSvgElement(
-                  DomApi.unsafeParseSvgString(
-                    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="24" height="24" fill="currentColor" style="opacity:1;"><path  d="M10.182 4.682a.45.45 0 0 1 .566-.058l.07.058l2.5 2.5l.058.07a.45.45 0 0 1 0 .496l-.058.07l-2.5 2.5a.45.45 0 0 1-.636-.636l1.731-1.732H3.087l1.731 1.732l.058.07a.451.451 0 0 1-.624.624l-.07-.058l-2.5-2.5a.45.45 0 0 1 0-.636l2.5-2.5l.07-.058a.45.45 0 0 1 .624.624l-.058.07L3.087 7.05h8.826l-1.731-1.732l-.058-.07a.45.45 0 0 1 .058-.566"/></svg>"""
-                  )
-                ),
-              )
-            }
-            .handleType[WithVerticalArrow] { case (_, signal) =>
-              div(
-                cls <-- styles.withVerticalArrow,
-                span(text <-- signal.map { case WithVerticalArrow(str) =>
-                  str
-                }),
-                foreignSvgElement(
-                  DomApi.unsafeParseSvgString(
-                    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="24" height="24" fill="currentColor" style="opacity:1;"><path  d="M7.252 1.624a.45.45 0 0 1 .566.058l2.5 2.5l.058.07a.45.45 0 0 1-.624.624l-.07-.057L7.95 3.087v8.826l1.731-1.731a.45.45 0 0 1 .637.637l-2.5 2.5a.45.45 0 0 1-.637 0l-2.5-2.5l-.057-.07a.45.45 0 0 1 .624-.625l.07.058l1.732 1.731V3.087L5.318 4.82a.45.45 0 0 1-.637-.637l2.5-2.5z"/></svg>"""
-                  )
-                ),
-              )
-            }
-            .toSignal
-
-          val clsSignal =
-            if (i === 0 && j === 0)
-              Signal
-                .combine(styles.btn, styles.topLeft)
-                .map((s1, s2) => List(s1, s2))
-            else if (i === 0 && j === n - 1)
-              Signal
-                .combine(styles.btn, styles.topRight)
-                .map((s1, s2) => List(s1, s2))
-            else if (i === m - 1 && j === 0)
-              Signal
-                .combine(styles.btn, styles.bottomLeft)
-                .map((s1, s2) => List(s1, s2))
-            else if (i === m - 1 && j === n - 1)
-              Signal
-                .combine(styles.btn, styles.bottomRight)
-                .map((s1, s2) => List(s1, s2))
-            else styles.btn.map(List(_))
-
-          button(
-            cls <-- clsSignal,
-            child <-- content,
-            dataAttr("safety") <-- signal.map(_.safety match {
-              case CellSafety.Indeterminate => "0"
-              case CellSafety.Safe => "1"
-              case CellSafety.Mine => "-1"
-            }),
-            L.onClick.mapTo((i, j)) --> onClickBus,
-          )
+          div(role("row"), cls <-- styles.row, children <-- cells)
+        }
       }
 
     val columnsSignal = clues.map { grid =>
@@ -196,9 +248,10 @@ object MinesweeperGrid {
     }
 
     div(
+      role("grid"),
       cls <-- styles.root,
       styleProp[Int]("--columns") <-- columnsSignal,
-      children <-- buttons,
+      children <-- buttonRows,
       mods.map(_(using ctx)),
     )
   }

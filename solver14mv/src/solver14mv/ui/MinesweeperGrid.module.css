@@ -8,6 +8,10 @@
   max-width: 40rem;
 }
 
+.row {
+  display: contents;
+}
+
 .btn {
   aspect-ratio: 1;
   background-color: var(--background);
