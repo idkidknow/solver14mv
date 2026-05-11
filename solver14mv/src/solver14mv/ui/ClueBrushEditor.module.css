@@ -57,6 +57,10 @@
     outline: none;
     font-size: 1.33rem;
     cursor: pointer;
+
+    &::selection {
+      background-color: var(--muted-foreground);
+    }
   }
 }
 
@@ -72,5 +76,9 @@
     text-align: center;
     font-size: 1rem;
     cursor: pointer;
+
+    &::selection {
+      background-color: var(--muted-foreground);
+    }
   }
 }
