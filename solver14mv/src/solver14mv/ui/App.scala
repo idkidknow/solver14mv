@@ -46,9 +46,11 @@ object App {
     }
 
     val clueBrush = Var(Clue.None)
+    val addNumber = EventBus[Int]()
     val cluesInput = div(
       ClueBrushEditor(
-        _.clueBrush --> clueBrush
+        ClueBrushEditor.clueBrush --> clueBrush,
+        addNumber.stream --> ClueBrushEditor.addNumber,
       ),
       MinesweeperGrid(clues.signal, cellSafety.signal)(
         MinesweeperGrid.onClick --> clues.updater[(Int, Int)] {
@@ -60,8 +62,11 @@ object App {
         }
       ),
     )
+
     div(
       initMiniZinc,
+      onKeyDown.filter(_.code === "Minus").mapTo(-1) --> addNumber,
+      onKeyDown.filter(_.code === "Equal").mapTo(1) --> addNumber,
       Header(),
       BoardSettingsInput(
         BoardSettingsInput.settings --> Observer.combine(

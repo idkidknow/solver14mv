@@ -16,15 +16,21 @@ object ClueBrushEditor {
 
   trait Context {
     def clueBrush: Signal[Clue]
+    def addNumber: Observer[Int]
   }
 
-  type ModFunction = Context => Mod[HtmlElement]
+  def clueBrush(using ctx: Context): Signal[Clue] = ctx.clueBrush
+  def addNumber(using ctx: Context): Observer[Int] = ctx.addNumber
+
+  type ModFunction = Context ?=> Mod[HtmlElement]
 
   def apply(mods: ModFunction*): HtmlElement = {
     val clueBrushVar = Var(Clue.None)
+    val addNumberBus = EventBus[Int]()
     val ctx = new Context {
       override def clueBrush: Signal[Clue] =
         clueBrushVar.signal
+      override def addNumber: Observer[Int] = addNumberBus.writer
     }
 
     def item0(
@@ -65,9 +71,17 @@ object ClueBrushEditor {
                 .map(_.toIntOption.map(_.max(0)))
                 .collect { case Some(value) => value } --> valueVar.writer,
             ),
+            inContext(thisNode => onClick --> { _ => thisNode.ref.select() }),
           ),
           eventProp("focusin").mapTo(()) --> updateBrush,
         ),
+        addNumberBus.stream
+          .withCurrentValueOf(active)
+          .filter(_._2)
+          .map(_._1) -->
+          valueVar.updater[Int] { case (value, delta) =>
+            (value + delta) max 0
+          },
         valueVar.signal.changes.map(clue) --> clueBrushVar,
         updateBrush.stream.sample(valueVar).map(clue) --> clueBrushVar,
       )
@@ -92,6 +106,7 @@ object ClueBrushEditor {
                 value.updated(idx, str)
               },
           ),
+          inContext(thisNode => onClick --> { _ => thisNode.ref.select() }),
         )
       }
       div(
@@ -232,7 +247,7 @@ object ClueBrushEditor {
         },
       ),
       wallItem,
-      mods.map(_(ctx)),
+      mods.map(_(using ctx)),
     )
   }
 }
