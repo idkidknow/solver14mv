@@ -12,6 +12,17 @@ import solver14mv.ui.BoardSettingsInput.Settings
 import solver14mv.ui.components.Button
 
 object App {
+  trait Styles {
+    val root: StrictSignal[String]
+    val main: StrictSignal[String]
+    val formDiv: StrictSignal[String]
+    val gridDiv: StrictSignal[String]
+    val boardSettingsInput: StrictSignal[String]
+    val ruleEditor: StrictSignal[String]
+    val clueBrushEditor: StrictSignal[String]
+  }
+  val styles = AppModuleCSS.as[Styles]
+
   def apply(dispatcher: Dispatcher[IO]): HtmlElement = {
     val m = Var(8)
     val n = Var(8)
@@ -54,15 +65,18 @@ object App {
         mineCount.writer.contramap[Settings](_.mineCount),
       ),
       Signal.combine(m, n).changes.distinct --> { case (m, n) => reset(m, n) },
+      cls <-- styles.boardSettingsInput,
     )
 
-    val ruleEditor = RuleEditor(RuleEditor.rules --> rules.writer)
+    val ruleEditor =
+      RuleEditor(RuleEditor.rules --> rules.writer, cls <-- styles.ruleEditor)
 
     val clueBrush = Var(Clue.None)
     val addNumber = EventBus[Int]()
     val clueBrushEditor = ClueBrushEditor(
       ClueBrushEditor.clueBrush --> clueBrush,
       addNumber.stream --> ClueBrushEditor.addNumber,
+      cls <-- styles.clueBrushEditor,
     )
     val brushEditShortcut = modSeq(
       onKeyDown.filter(_.code === "Minus").mapTo(-1) --> addNumber,
@@ -123,16 +137,28 @@ object App {
     )
 
     div(
+      cls <-- styles.root,
       initMiniZinc,
       header,
-      boardSettingsInput,
-      ruleEditor,
-      clueBrushEditor,
-      brushEditShortcut,
-      minesweeperGrid,
-      resetButton,
-      solveButton,
-      stopButton,
+      div(
+        cls <-- styles.main,
+        div(
+          cls <-- styles.formDiv,
+          boardSettingsInput,
+          ruleEditor,
+          clueBrushEditor,
+        ),
+        brushEditShortcut,
+        div(
+          cls <-- styles.gridDiv,
+          minesweeperGrid,
+          div(
+            resetButton,
+            solveButton,
+            stopButton,
+          ),
+        ),
+      ),
     )
   }
 }

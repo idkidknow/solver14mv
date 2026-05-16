@@ -1,0 +1,41 @@
+.root {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.main {
+  margin: 1rem 24px;
+  display: flex;
+  flex-flow: row-reverse wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.formDiv {
+  flex: 1 1;
+  max-width: min(100%, 40rem);
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gridDiv {
+  flex: 1 0;
+  max-width: 40rem;
+  min-width: 20rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.boardSettingsInput {
+  max-width: 30rem;
+}
+
+.ruleEditor {
+  margin: 0.5rem 1rem;
+}
+
+.clueBrushEditor {
+  margin: 0 1rem;
+}
