@@ -116,6 +116,9 @@
   & > span[data-content="0"] {
     opacity: 0;
   }
+  & > span:first-of-type {
+    opacity: 1;
+  }
   & > div {
     position: absolute;
     font-size: 0.75rem;
