@@ -1,15 +1,11 @@
 package solver14mv.solver
 
-final case class SolveResult(
-    i: Int,
-    j: Int,
-    safety: SolveResult.CellSafety,
-)
+import cats.Eq
+import cats.derived.*
 
-object SolveResult {
-  enum CellSafety {
-    case Safe
-    case Mine
-    case Indeterminate
-  }
+enum SolveResult derives Eq {
+  case Safe
+  case Mine
+  case Indeterminate
+  case Unsat
 }

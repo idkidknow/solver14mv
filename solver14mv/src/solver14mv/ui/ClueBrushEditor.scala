@@ -1,9 +1,9 @@
 package solver14mv.ui
 
+import cats.kernel.Eq
 import cats.syntax.all.*
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
-import cats.kernel.Eq
 
 object ClueBrushEditor {
   trait Styles {

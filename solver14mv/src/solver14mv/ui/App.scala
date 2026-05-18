@@ -4,10 +4,11 @@ import cats.effect.IO
 import cats.effect.std.Dispatcher
 import cats.syntax.all.*
 import com.raquo.laminar.api.L.*
-import solver14mv.solver
 import solver14mv.solver.Clue
 import solver14mv.solver.Rule
-import solver14mv.solver.SolveResult.CellSafety
+import solver14mv.solver.SolveEvent
+import solver14mv.solver.SolveEvent.CellSafety
+import solver14mv.solver.Solver
 import solver14mv.ui.BoardSettingsInput.Settings
 import solver14mv.ui.components.Button
 
@@ -27,18 +28,21 @@ object App {
     val m = Var(8)
     val n = Var(8)
     val mineCount = Var(Option(26))
-    val clues: Var[Array[Array[Clue]]] = Var(
-      Array.fill(m.now(), n.now())(Clue.None)
+    val clues: Var[IArray[IArray[Clue]]] = Var(
+      IArray.fill(m.now(), n.now())(Clue.None)
     )
-    val cellSafety: Var[Array[Array[CellSafety]]] = Var(
-      Array.fill(m.now(), n.now())(CellSafety.Indeterminate)
+    val cellSafety: Var[IArray[IArray[CellSafety]]] = Var(
+      IArray.fill(m.now(), n.now())(CellSafety.Indeterminate)
     )
     val rules = Var(Set.empty[Rule])
 
-    val miniZincInitialized = Var(false)
-    val initMiniZinc: Mod[Element] = {
-      val io: IO[Unit] =
-        solver.minizinc.raw.init[IO] *> IO.delay(miniZincInitialized.set(true))
+    val solverVar = Var(Option.empty[Solver[IO]])
+    val initSolver: Mod[Element] = {
+      val io: IO[Unit] = for {
+        _ <- solver14mv.solver.minizinc.raw.init[IO]
+        solver <- Solver.incremental[IO]
+        _ <- IO.delay(solverVar.set(Some(solver)))
+      } yield ()
       onMountCallback { _ => dispatcher.unsafeRunAndForget(io) }
     }
 
@@ -52,8 +56,8 @@ object App {
 
     def reset(m: Int, n: Int): Unit = {
       stopSolver()
-      clues.set(Array.fill(m, n)(Clue.None))
-      cellSafety.set(Array.fill(m, n)(CellSafety.Indeterminate))
+      clues.set(IArray.fill(m, n)(Clue.None))
+      cellSafety.set(IArray.fill(m, n)(CellSafety.Indeterminate))
     }
 
     val header = Header()
@@ -101,17 +105,25 @@ object App {
     val solveButton = Button()(
       "solve",
       onClick --> { _ =>
-        val solving: IO[Unit] = solver
-          .solve[IO](clues.now(), rules.now(), mineCount.now())
-          .foreach { result =>
-            IO.delay {
-              cellSafety.update { prev =>
-                prev.updated(
-                  result.i,
-                  prev(result.i).updated(result.j, result.safety),
-                )
-              }
-            }
+        val input = Solver.Input(clues.now(), rules.now(), mineCount.now())
+        val solving: IO[Unit] = solverVar
+          .now()
+          .get
+          .solve(input)
+          .foreach {
+            case SolveEvent.Begin(i, j) => IO.println(s"begin ($i, $j)")
+            case SolveEvent.Pending(set) =>
+              IO.println(s"pending: ${set.toString}")
+            case SolveEvent.Result(i, j, safety) =>
+              IO.delay {
+                cellSafety.update { prev =>
+                  prev.updated(
+                    i,
+                    prev(i).updated(j, safety),
+                  )
+                }
+              } *> IO.println(s"result: ($i, $j) ${safety.toString}")
+            case SolveEvent.Unsat => IO.println("unsat")
           }
           .compile
           .drain
@@ -127,7 +139,7 @@ object App {
         } yield ()
         dispatcher.unsafeRunAndForget(io)
       },
-      disabled <-- miniZincInitialized.signal.not,
+      disabled <-- solverVar.signal.mapLazy(_.isEmpty),
     )
 
     val stopButton = Button(variant = "secondary")(
@@ -138,7 +150,7 @@ object App {
 
     div(
       cls <-- styles.root,
-      initMiniZinc,
+      initSolver,
       header,
       div(
         cls <-- styles.main,

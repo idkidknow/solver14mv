@@ -5,7 +5,7 @@ import com.raquo.laminar.DomApi
 import com.raquo.laminar.api.L
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
-import solver14mv.solver.SolveResult.CellSafety
+import solver14mv.solver.SolveEvent.CellSafety
 
 import scala.scalajs.js
 
@@ -195,15 +195,15 @@ object MinesweeperGrid {
   }
 
   def apply(
-      clues: Signal[Array[Array[Clue]]],
-      cellSafety: Signal[Array[Array[CellSafety]]],
+      clues: Signal[IArray[IArray[Clue]]],
+      cellSafety: Signal[IArray[IArray[CellSafety]]],
   )(mods: ModFunction*): HtmlElement = {
     val onClickBus = EventBus[(Int, Int)]()
     val ctx = new Context {
       override def onClick: EventStream[(Int, Int)] = onClickBus.stream
     }
 
-    val gridSignal: Signal[Array[Array[(Clue, CellSafety)]]] =
+    val gridSignal: Signal[IArray[IArray[(Clue, CellSafety)]]] =
       Signal.combine(clues, cellSafety).map { case (clue, cellSafety) =>
         clue
           .zip(cellSafety)
@@ -222,9 +222,9 @@ object MinesweeperGrid {
       }
       .distinct
       .flatMapSwitch { case (m, n) =>
-        gridSignal.map(_.toSeq).splitByIndex { case (i, _, rowSignal) =>
+        gridSignal.map(_.toList).splitByIndex { case (i, _, rowSignal) =>
           val cells =
-            rowSignal.map(_.toSeq).splitByIndex { case (j, _, signal) =>
+            rowSignal.map(_.toList).splitByIndex { case (j, _, signal) =>
               val signal1 = signal.map { case (clue, safety) =>
                 (model = ClueViewModel.fromClue(clue), safety = safety)
               }

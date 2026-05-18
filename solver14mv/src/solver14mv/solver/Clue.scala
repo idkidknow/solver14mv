@@ -1,6 +1,9 @@
 package solver14mv.solver
 
-enum Clue {
+import cats.derived.*
+import cats.Eq
+
+enum Clue derives Eq {
   case None
   case QuestionMark
   case Flagged
