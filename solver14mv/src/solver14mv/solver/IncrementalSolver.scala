@@ -67,13 +67,13 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
       val (m, n) = mn(input)
       val patch: F[(Input, Map[(Int, Int), SolveResult])] = for {
         currState <- getState
-        newState <- canPatch(currState.input, input) match {
+        (newState, patchedInput) <- canPatch(currState.input, input) match {
           case false =>
             val newState =
               State(input, Array.fill(m, n)(SolveResult.Indeterminate))
-            setState(newState).as(newState)
+            setState(newState).as((newState, input))
           case true =>
-            val newClues = {
+            val patchedClues = {
               val arr = input.clues.map(_.toSeq.toArray).toSeq.toArray
               for {
                 i <- 0 until m
@@ -88,9 +88,9 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
               }
               IArray.unsafeFromArray(arr.map(IArray.unsafeFromArray))
             }
-            val newInput = input.copy(clues = newClues)
-            val newState = currState.copy(input = newInput)
-            setState(newState).as(newState)
+            val patchedInput = input.copy(clues = patchedClues)
+            val newState = currState.copy(input = input)
+            setState(newState).as((newState, patchedInput))
         }
       } yield {
         val skipped = (for {
@@ -98,12 +98,12 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
           j <- 0 until n
           if newState.result(i)(j) =!= SolveResult.Indeterminate
         } yield ((i, j), newState.result(i)(j))).toMap
-        (newState.input, skipped)
+        (patchedInput, skipped)
       }
 
       Stream
         .eval(patch)
-        .flatMap { case (input, skipped) =>
+        .flatMap { case (patchedInput, skipped) =>
           val skippedEvents = skipped.map { case ((i, j), result) =>
             result match {
               case SolveResult.Indeterminate =>
@@ -114,10 +114,11 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
             }
           }.toSeq
           val others = directSolver.solve(
-            input,
+            patchedInput,
             (i, j) => filter(i, j) && !skipped.contains((i, j)),
           )
-          if (skippedEvents.exists(_ === SolveEvent.Unsat)) Stream(SolveEvent.Unsat)
+          if (skippedEvents.exists(_ === SolveEvent.Unsat))
+            Stream(SolveEvent.Unsat)
           else Stream(skippedEvents*) ++ others
         }
         .evalTap(updateStateResults)
