@@ -44,7 +44,10 @@ def moduleCSSImpl[A: Type](path: Expr[String], obj: Expr[js.Object])(using
         .asInstanceOf[js.Dynamic]
         .selectDynamic($name)
         .asInstanceOf
-      if (js.`import`.meta.hot != null) { // scalafix:ok
+
+      if ((!js.`import`.meta.hot).asInstanceOf[Boolean]) {
+        L.Val(str)
+      } else {
         val varStr = L.Var(str)
         val _ = js.`import`.meta.hot.accept(
           $path.asInstanceOf,
@@ -54,8 +57,6 @@ def moduleCSSImpl[A: Type](path: Expr[String], obj: Expr[js.Object])(using
           },
         )
         varStr.signal
-      } else {
-        L.Val(str)
       }
     }
     ValDef(
