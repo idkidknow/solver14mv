@@ -5,7 +5,6 @@ import com.raquo.laminar.DomApi
 import com.raquo.laminar.api.L
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
-import solver14mv.solver.SolveEvent.CellSafety
 import solver14mv.utils.Grid
 
 import scala.scalajs.js
@@ -80,7 +79,7 @@ object MinesweeperGrid {
       n: Int,
       i: Int,
       j: Int,
-      signal: Signal[(model: ClueViewModel, safety: CellSafety)],
+      signal: Signal[(model: ClueViewModel, state: SolveState)],
       isCurrent: (Int, Int) => Signal[Boolean],
       setCurrent: (Int, Int) => Unit,
       onClickObserver: Observer[(Int, Int)],
@@ -160,11 +159,8 @@ object MinesweeperGrid {
       role("gridcell"),
       cls <-- clsSignal,
       child <-- content,
-      dataAttr("safety") <-- signal.map(_.safety match {
-        case CellSafety.Indeterminate => "0"
-        case CellSafety.Safe => "1"
-        case CellSafety.Mine => "-1"
-      }),
+      dataAttr("safety") <-- signal.map(_.state.safety.productPrefix),
+      dataAttr("progress") <-- signal.map(_.state.progress.productPrefix),
       tabIndex <-- isCurrent(i, j).map(if (_) 0 else -1),
       focus <-- isCurrent(i, j).changes,
       onFocus --> { _ => setCurrent(i, j) },
@@ -197,16 +193,16 @@ object MinesweeperGrid {
 
   def apply(
       clues: Signal[Grid[Clue]],
-      cellSafety: Signal[Grid[CellSafety]],
+      state: Signal[Grid[SolveState]],
   )(mods: ModFunction*): HtmlElement = {
     val onClickBus = EventBus[(Int, Int)]()
     val ctx = new Context {
       override def onClick: EventStream[(Int, Int)] = onClickBus.stream
     }
 
-    val gridSignal: Signal[Grid[(Clue, CellSafety)]] =
-      Signal.combine(clues, cellSafety).map { case (clue, cellSafety) =>
-        clue.zip(cellSafety)
+    val gridSignal: Signal[Grid[(Clue, SolveState)]] =
+      Signal.combine(clues, state).map { case (clue, state) =>
+        clue.zip(state)
       }
 
     val currentCell = Var((0, 0))
@@ -220,8 +216,8 @@ object MinesweeperGrid {
         gridSignal.map(_.toJs).splitByIndex { case (i, _, rowSignal) =>
           val cells =
             rowSignal.splitByIndex { case (j, _, signal) =>
-              val signal1 = signal.map { case (clue, safety) =>
-                (model = ClueViewModel.fromClue(clue), safety = safety)
+              val signal1 = signal.map { case (clue, state) =>
+                (model = ClueViewModel.fromClue(clue), state = state)
               }
               cellButton(
                 m,

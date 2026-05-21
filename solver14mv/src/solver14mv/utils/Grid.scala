@@ -24,11 +24,18 @@ final class Grid[A] private (inner: js.Array[js.Array[A]]) {
     }
     new Grid(arr)
   }
+
+  def map[B](f: A => B): Grid[B] = {
+    val arr = inner.map(_.map(f))
+    new Grid(arr)
+  }
 }
 
 object Grid {
   def apply[A](arr: js.Array[js.Array[A]]): Grid[A] =
     new Grid(arr.map(_.map(identity)))
+
+  def unsafeFromJs[A](arr: js.Array[js.Array[A]]): Grid[A] = new Grid(arr)
 
   def fill[A](m: Int, n: Int)(elem: => A): Grid[A] = {
     def createRow() = {

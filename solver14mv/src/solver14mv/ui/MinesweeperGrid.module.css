@@ -24,7 +24,8 @@
 
   transition:
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    outline-color 0.15s ease;
 
   &:hover {
     background-color: var(--muted);
@@ -40,12 +41,33 @@
   }
 }
 
-.btn[data-safety="1"] {
+.btn[data-safety="Safe"] {
   background-color: #779977;
+
+  &:is([data-progress="Outdated"], [data-progress="Solving"]) {
+    background-color: oklch(from #779977 calc(l * 1.2) calc(c * 0.6) h);
+  }
+
+  &[data-progress="NewlySolved"] {
+    background-color: oklch(from #779977 calc(l * 1.1) c h);
+  }
 }
 
-.btn[data-safety="-1"] {
+.btn[data-safety="Mine"] {
   background-color: #aa4477;
+
+  &:is([data-progress="Outdated"], [data-progress="Solving"]) {
+    background-color: oklch(from #aa4477 calc(l * 1.2) calc(c * 0.6) h);
+  }
+
+  &[data-progress="NewlySolved"] {
+    background-color: oklch(from #aa4477 calc(l * 1.1) c h);
+  }
+}
+
+.btn[data-progress="Solving"] {
+  outline: 3px solid rgb(from var(--primary) r g b / 0.15);
+  outline-offset: -3px;
 }
 
 .topLeft {

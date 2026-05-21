@@ -6,7 +6,6 @@ import cats.syntax.all.*
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
 import solver14mv.solver.Rule
-import solver14mv.solver.SolveEvent
 import solver14mv.solver.SolveEvent.CellSafety
 import solver14mv.solver.Solver
 import solver14mv.ui.BoardSettingsInput.Settings
@@ -32,8 +31,10 @@ object App {
     val clues: Var[Grid[Clue]] = Var(
       Grid.fill(m.now(), n.now())(Clue.None)
     )
-    val cellSafety: Var[Grid[CellSafety]] = Var(
-      Grid.fill(m.now(), n.now())(CellSafety.Indeterminate)
+    val solveState: Var[Grid[SolveState]] = Var(
+      Grid.fill(m.now(), n.now())(
+        SolveState(CellSafety.Indeterminate, SolveState.Progress.Outdated)
+      )
     )
     val rules = Var(Set.empty[Rule])
 
@@ -58,7 +59,11 @@ object App {
     def reset(m: Int, n: Int): Unit = {
       stopSolver()
       clues.set(Grid.fill(m, n)(Clue.None))
-      cellSafety.set(Grid.fill(m, n)(CellSafety.Indeterminate))
+      solveState.set(
+        Grid.fill(m, n)(
+          SolveState(CellSafety.Indeterminate, SolveState.Progress.Outdated)
+        )
+      )
     }
 
     val header = Header()
@@ -88,7 +93,7 @@ object App {
       onKeyDown.filter(_.code === "Equal").mapTo(1) --> addNumber,
     )
 
-    val minesweeperGrid = MinesweeperGrid(clues.signal, cellSafety.signal)(
+    val minesweeperGrid = MinesweeperGrid(clues.signal, solveState.signal)(
       MinesweeperGrid.onClick --> clues.updater[(Int, Int)] {
         case (grid, (i, j)) =>
           grid.updated2D(i, j, clueBrush.now())
@@ -108,17 +113,12 @@ object App {
           .now()
           .get
           .solve(input)
-          .foreach {
-            case SolveEvent.Begin(i, j) => IO.println(s"begin ($i, $j)")
-            case SolveEvent.Pending(set) =>
-              IO.println(s"pending: ${set.toString}")
-            case SolveEvent.Result(i, j, safety) =>
-              IO.delay {
-                cellSafety.update { prev =>
-                  prev.updated2D(i, j, safety)
-                }
-              } *> IO.println(s"result: ($i, $j) ${safety.toString}")
-            case SolveEvent.Unsat => IO.println("unsat")
+          .foreach { event =>
+            IO.delay {
+              solveState.update { prev =>
+                SolveState.update(prev, event)
+              }
+            }
           }
           .compile
           .drain
