@@ -1,20 +1,25 @@
 package solver14mv.solver
 
 import cats.effect.Async
+import cats.effect.kernel.Sync
+import cats.effect.std.Mutex
 import cats.syntax.all.*
 import fs2.Stream
 import solver14mv.solver.IncrementalSolver.State
-import cats.effect.std.Mutex
-import cats.effect.kernel.Sync
 import solver14mv.solver.SolveEvent.CellSafety
 import solver14mv.solver.Solver.Input
+import solver14mv.utils.Grid
+
+import scala.scalajs.js
 
 class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
     extends Solver[F] {
 
-  // used inside mutex.lock
   private var state: State =
-    State(Solver.Input(IArray.empty, Set(), None), Array.empty)
+    State(
+      Solver.Input(Grid(new js.Array()), Set(), None),
+      Array.empty,
+    ) // scalafix:ok; Only used inside mutex.lock
   private def getState: F[State] = Sync[F].delay(state)
   private def setState(newState: State): F[Unit] =
     Sync[F].delay { state = newState }
@@ -31,7 +36,7 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
   private val directSolver: Solver[F] = Solver.direct[F]
 
   private def mn(input: Solver.Input) =
-    (input.clues.length, input.clues.lift(0).map(_.length).getOrElse(0))
+    (input.clues.m, input.clues.n)
 
   private def canPatch(
       prevInput: Solver.Input,
@@ -49,7 +54,7 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
       (for {
         i <- 0 until m
         j <- 0 until n
-      } yield (prevClues(i)(j), currClues(i)(j))).forall {
+      } yield (prevClues(i, j), currClues(i, j))).forall {
         case (Clue.None, _) => true
         case (Clue.QuestionMark, Clue.None | Clue.Flagged) => false
         case (Clue.QuestionMark, _) => true
@@ -74,7 +79,7 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
             setState(newState).as((newState, input))
           case true =>
             val patchedClues = {
-              val arr = input.clues.map(_.toSeq.toArray).toSeq.toArray
+              val arr = input.clues.toJs
               for {
                 i <- 0 until m
                 j <- 0 until n
@@ -86,7 +91,7 @@ class IncrementalSolver[F[_]: Async] private (mutex: Mutex[F])
                   case _ =>
                 }
               }
-              IArray.unsafeFromArray(arr.map(IArray.unsafeFromArray))
+              Grid(arr)
             }
             val patchedInput = input.copy(clues = patchedClues)
             val newState = currState.copy(input = input)

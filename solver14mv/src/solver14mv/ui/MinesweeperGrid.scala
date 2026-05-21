@@ -6,6 +6,7 @@ import com.raquo.laminar.api.L
 import com.raquo.laminar.api.L.*
 import solver14mv.solver.Clue
 import solver14mv.solver.SolveEvent.CellSafety
+import solver14mv.utils.Grid
 
 import scala.scalajs.js
 
@@ -195,19 +196,17 @@ object MinesweeperGrid {
   }
 
   def apply(
-      clues: Signal[IArray[IArray[Clue]]],
-      cellSafety: Signal[IArray[IArray[CellSafety]]],
+      clues: Signal[Grid[Clue]],
+      cellSafety: Signal[Grid[CellSafety]],
   )(mods: ModFunction*): HtmlElement = {
     val onClickBus = EventBus[(Int, Int)]()
     val ctx = new Context {
       override def onClick: EventStream[(Int, Int)] = onClickBus.stream
     }
 
-    val gridSignal: Signal[IArray[IArray[(Clue, CellSafety)]]] =
+    val gridSignal: Signal[Grid[(Clue, CellSafety)]] =
       Signal.combine(clues, cellSafety).map { case (clue, cellSafety) =>
-        clue
-          .zip(cellSafety)
-          .map((clueRow, cellSafetyRow) => clueRow.zip(cellSafetyRow))
+        clue.zip(cellSafety)
       }
 
     val currentCell = Var((0, 0))
@@ -215,16 +214,12 @@ object MinesweeperGrid {
       currentCell.signal.map(_ === (i, j)).distinct
 
     val buttonRows = gridSignal
-      .map { grid =>
-        val m = grid.length
-        val n = grid.lift(0).map(_.length).getOrElse(0)
-        (m, n)
-      }
+      .map(_.mn)
       .distinct
       .flatMapSwitch { case (m, n) =>
-        gridSignal.map(_.toList).splitByIndex { case (i, _, rowSignal) =>
+        gridSignal.map(_.toJs).splitByIndex { case (i, _, rowSignal) =>
           val cells =
-            rowSignal.map(_.toList).splitByIndex { case (j, _, signal) =>
+            rowSignal.splitByIndex { case (j, _, signal) =>
               val signal1 = signal.map { case (clue, safety) =>
                 (model = ClueViewModel.fromClue(clue), safety = safety)
               }
@@ -243,9 +238,7 @@ object MinesweeperGrid {
         }
       }
 
-    val columnsSignal = clues.map { grid =>
-      grid.lift(0).map(_.length).getOrElse(0)
-    }
+    val columnsSignal = clues.map(_.n)
 
     div(
       role("grid"),

@@ -7,11 +7,12 @@ import solver14mv.solver.minizinc.MiniZincFiles
 import solver14mv.solver.minizinc.raw.Model as RawModel
 import solver14mv.solver.minizinc.raw.ParamConfig
 import solver14mv.solver.minizinc.raw.SolveConfig
+import solver14mv.utils.Grid
 
 import scala.scalajs.js.Dynamic.literal as lit
 
 final class Model[F[_]: Async] private (
-    cluesAndModel: Ref[F, (IArray[IArray[Clue]], RawModel)],
+    cluesAndModel: Ref[F, (Grid[Clue], RawModel)],
     val rules: Set[Rule],
     val mineCount: Option[Int],
 ) {
@@ -74,15 +75,16 @@ final class Model[F[_]: Async] private (
       result match {
         case SolveResult.Mine =>
           cluesAndModel.update { case (clues, _) =>
-            val newClues = clues.updated(i, clues(i).updated(j, Clue.Flagged))
+
+            val newClues = clues.updated2D(i, j, Clue.Flagged)
             val newModel = Model.getRawModel(newClues, rules, mineCount)
             (newClues, newModel)
           }
         case SolveResult.Safe =>
           cluesAndModel.update { case (clues, _) =>
-            val newClues = clues(i)(j) match {
+            val newClues = clues(i, j) match {
               case Clue.None =>
-                clues.updated(i, clues(i).updated(j, Clue.QuestionMark))
+                clues.updated2D(i, j, Clue.QuestionMark)
               case _ => clues
             }
             val newModel = Model.getRawModel(newClues, rules, mineCount)
@@ -98,12 +100,11 @@ final class Model[F[_]: Async] private (
 
 object Model {
   private def getRawModel(
-      clues: IArray[IArray[Clue]],
+      clues: Grid[Clue],
       rules: Set[Rule],
       mineCount: Option[Int],
   ): RawModel = {
-    val m = clues.length
-    val n = clues.lift(0).map(_.length).getOrElse(0)
+    val (m, n) = clues.mn
 
     val cluesDzn = {
       val seq = for {
@@ -112,7 +113,7 @@ object Model {
         // 1-indexed in .mzn, off-by-one
         ii = i + 1
         jj = j + 1
-        dzn <- clues(i)(j) match {
+        dzn <- clues(i, j) match {
           case Clue.None => None
           case Clue.QuestionMark =>
             s"(i: $ii, j: $jj, ty: QuestionMark, data: 0)".some
@@ -169,7 +170,7 @@ object Model {
   }
 
   def apply[F[_]: Async](
-      clues: IArray[IArray[Clue]],
+      clues: Grid[Clue],
       rules: Set[Rule],
       mineCount: Option[Int],
   ): F[Model[F]] = {

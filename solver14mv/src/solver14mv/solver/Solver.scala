@@ -6,6 +6,7 @@ import cats.syntax.all.*
 import fs2.Stream
 import fs2.concurrent.Channel
 import solver14mv.solver.SolveEvent.CellSafety
+import solver14mv.utils.Grid
 
 trait Solver[F[_]] {
 
@@ -21,7 +22,7 @@ trait Solver[F[_]] {
 
 object Solver {
   final case class Input(
-      clues: IArray[IArray[Clue]],
+      clues: Grid[Clue],
       rules: Set[Rule],
       mineCount: Option[Int],
   )
@@ -32,8 +33,7 @@ object Solver {
         filter: (Int, Int) => Boolean,
     ): Stream[F, SolveEvent] = {
       val Input(clues, rules, mineCount) = input // scalafix:ok
-      val m = clues.length
-      val n = clues.lift(0).map(_.length).getOrElse(0)
+      val (m, n) = clues.mn
 
       val ij = for {
         i <- 0 until m

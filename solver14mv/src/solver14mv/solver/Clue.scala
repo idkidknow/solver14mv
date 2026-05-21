@@ -1,7 +1,7 @@
 package solver14mv.solver
 
-import cats.derived.*
 import cats.Eq
+import cats.derived.*
 
 enum Clue derives Eq {
   case None

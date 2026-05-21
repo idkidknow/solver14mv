@@ -11,6 +11,7 @@ import solver14mv.solver.SolveEvent.CellSafety
 import solver14mv.solver.Solver
 import solver14mv.ui.BoardSettingsInput.Settings
 import solver14mv.ui.components.Button
+import solver14mv.utils.Grid
 
 object App {
   trait Styles {
@@ -28,11 +29,11 @@ object App {
     val m = Var(8)
     val n = Var(8)
     val mineCount = Var(Option(26))
-    val clues: Var[IArray[IArray[Clue]]] = Var(
-      IArray.fill(m.now(), n.now())(Clue.None)
+    val clues: Var[Grid[Clue]] = Var(
+      Grid.fill(m.now(), n.now())(Clue.None)
     )
-    val cellSafety: Var[IArray[IArray[CellSafety]]] = Var(
-      IArray.fill(m.now(), n.now())(CellSafety.Indeterminate)
+    val cellSafety: Var[Grid[CellSafety]] = Var(
+      Grid.fill(m.now(), n.now())(CellSafety.Indeterminate)
     )
     val rules = Var(Set.empty[Rule])
 
@@ -56,8 +57,8 @@ object App {
 
     def reset(m: Int, n: Int): Unit = {
       stopSolver()
-      clues.set(IArray.fill(m, n)(Clue.None))
-      cellSafety.set(IArray.fill(m, n)(CellSafety.Indeterminate))
+      clues.set(Grid.fill(m, n)(Clue.None))
+      cellSafety.set(Grid.fill(m, n)(CellSafety.Indeterminate))
     }
 
     val header = Header()
@@ -90,10 +91,7 @@ object App {
     val minesweeperGrid = MinesweeperGrid(clues.signal, cellSafety.signal)(
       MinesweeperGrid.onClick --> clues.updater[(Int, Int)] {
         case (grid, (i, j)) =>
-          grid.updated(
-            i,
-            grid(i).updated(j, clueBrush.now()),
-          )
+          grid.updated2D(i, j, clueBrush.now())
       }
     )
 
@@ -117,10 +115,7 @@ object App {
             case SolveEvent.Result(i, j, safety) =>
               IO.delay {
                 cellSafety.update { prev =>
-                  prev.updated(
-                    i,
-                    prev(i).updated(j, safety),
-                  )
+                  prev.updated2D(i, j, safety)
                 }
               } *> IO.println(s"result: ($i, $j) ${safety.toString}")
             case SolveEvent.Unsat => IO.println("unsat")
