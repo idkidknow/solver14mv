@@ -1,0 +1,6 @@
+allowBuilds:
+  msw: false
+overrides:
+  vite: ^8.0.0
+patchedDependencies:
+  minizinc: patches/minizinc.patch
