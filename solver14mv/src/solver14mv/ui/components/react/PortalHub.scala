@@ -169,7 +169,7 @@ object PortalHub {
           mount.map(_ => unmount)
         }
       } yield {
-        ReactPortal(child.value.rawNode, props.container)
+        ReactPortal(child.value, props.container)
       }
     }
 
@@ -202,7 +202,7 @@ object PortalHub {
           }
         })
       } yield {
-        ReactPortal(child.value.rawNode, props.container)
+        ReactPortal(child.value, props.container)
       }
     }
 
@@ -237,7 +237,7 @@ object PortalHub {
           props.ref.toObserver.onNext(arr)
         })
       } yield {
-        ReactPortal(child.value.rawNode, props.container)
+        ReactPortal(child.value, props.container)
       }
     }
 
