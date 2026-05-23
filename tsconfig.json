@@ -22,7 +22,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@scala/*": ["./out/solver14mv/dev.dest/*"],
+      "@scala/*": ["./out/build.dest/*"],
     },
   },
   "include": ["src"],

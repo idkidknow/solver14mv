@@ -6,7 +6,8 @@ package build
 import mill.*, scalalib.*, scalajslib.*, scalajslib.api.*
 import mill.api.BuildCtx
 import com.goyeau.mill.scalafix.ScalafixModule
-import mill.api.Task.Simple
+import mill.api.Evaluator
+import mainargs.Flag
 
 object solver14mv extends ScalaJSModule with ScalafixModule {
   def scalaVersion = "3.8.3"
@@ -109,9 +110,23 @@ object solver14mv extends ScalaJSModule with ScalafixModule {
 
   def dev = Task {
     val out = fastLinkJS()
-    val dir = out.dest.path
-    os.copy.over(dir, Task.dest)
+    os.copy.over(out.dest.path, Task.dest)
     os.copy(`main-d-ts`().path, Task.dest / "main.d.ts")
     PathRef(Task.dest)
   }
+  def prod = Task {
+    val out = fullLinkJS()
+    os.copy.over(out.dest.path, Task.dest)
+    os.copy(`main-d-ts`().path, Task.dest / "main.d.ts")
+    PathRef(Task.dest)
+  }
+}
+
+def build(evaluator: Evaluator, dev: Flag) = Task.Command(exclusive = true) {
+  val task = if (dev.value) "solver14mv.dev" else "solver14mv.prod"
+  val ret = evaluator.evaluate(Seq(task)).get
+  ret.watchable.foreach(BuildCtx.evalWatch0)
+  val pathRef = ret.values.get.head.asInstanceOf[PathRef]
+  os.copy.over(pathRef.path, Task.dest)
+  PathRef(Task.dest)
 }

@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": __dirname,
-      "@scala": path.resolve(__dirname, "./out/solver14mv/dev.dest"),
+      "@scala": path.resolve(__dirname, "./out/build.dest"),
       "@src": path.resolve(__dirname, "./solver14mv/src"),
     },
   },
