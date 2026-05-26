@@ -66,6 +66,17 @@ object App {
       )
     }
 
+    def stop(): Unit = {
+      stopSolver()
+      solveState.update(prev =>
+        prev.map {
+          case SolveState(safety, SolveState.Progress.Solving) =>
+            SolveState(safety, SolveState.Progress.Outdated)
+          case state => state
+        }
+      )
+    }
+
     val header = Header()
 
     val boardSettingsInput = BoardSettingsInput(
@@ -139,7 +150,7 @@ object App {
 
     val stopButton = Button(variant = "secondary")(
       "stop",
-      onClick --> { _ => stopSolver() },
+      onClick --> { _ => stop() },
       disabled <-- runningSolverCancel.signal.map(_.isEmpty),
     )
 

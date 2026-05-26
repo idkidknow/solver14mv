@@ -1,9 +1,9 @@
 package solver14mv.ui
 
+import cats.syntax.all.*
 import solver14mv.solver.SolveEvent
 import solver14mv.solver.SolveEvent.CellSafety
 import solver14mv.utils.Grid
-import cats.syntax.all.*
 
 final case class SolveState(
     safety: CellSafety,
