@@ -53,6 +53,7 @@ object ClueBrushEditor {
     def item1(
         name: String,
         clue: Int => Clue,
+        range: (Int, Int),
         active: Signal[Boolean],
     ): HtmlElement = {
       val valueVar = Var(0)
@@ -68,7 +69,7 @@ object ClueBrushEditor {
             controlled(
               value <-- valueVar.signal.mapLazy(_.toString),
               onInput.mapToValue
-                .map(_.toIntOption.map(_.max(0)))
+                .map(_.toIntOption.map(_.max(range._1).min(range._2)))
                 .collect { case Some(value) => value } --> valueVar.writer,
             ),
             inContext(thisNode => onClick --> { _ => thisNode.ref.select() }),
@@ -80,7 +81,7 @@ object ClueBrushEditor {
           .filter(_._2)
           .map(_._1) -->
           valueVar.updater[Int] { case (value, delta) =>
-            (value + delta) max 0
+            (value + delta).max(range._1).min(range._2)
           },
         valueVar.signal.changes.map(clue) --> clueBrushVar,
         updateBrush.stream.sample(valueVar).map(clue) --> clueBrushVar,
@@ -161,6 +162,7 @@ object ClueBrushEditor {
       item1(
         "Vanilla",
         Clue.Vanilla(_),
+        (0, 8),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Vanilla => true
           case _ => false
@@ -169,6 +171,7 @@ object ClueBrushEditor {
       item1(
         "Multiple",
         Clue.Multiple(_),
+        (0, 12),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Multiple => true
           case _ => false
@@ -177,6 +180,7 @@ object ClueBrushEditor {
       item1(
         "Liar",
         Clue.Liar(_),
+        (0, 9),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Liar => true
           case _ => false
@@ -185,6 +189,7 @@ object ClueBrushEditor {
       item1(
         "Negation",
         Clue.Negation(_),
+        (0, 4),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Negation => true
           case _ => false
@@ -193,6 +198,7 @@ object ClueBrushEditor {
       item1(
         "Cross",
         Clue.Cross(_),
+        (0, 8),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Cross => true
           case _ => false
@@ -201,6 +207,7 @@ object ClueBrushEditor {
       item1(
         "Partition",
         Clue.Partition(_),
+        (0, 4),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Partition => true
           case _ => false
@@ -209,6 +216,7 @@ object ClueBrushEditor {
       item1(
         "Eyesight",
         Clue.Eyesight(_),
+        (0, Int.MaxValue),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Eyesight => true
           case _ => false
@@ -217,6 +225,7 @@ object ClueBrushEditor {
       item1(
         "Mini Cross",
         Clue.MiniCross(_),
+        (0, 4),
         clueBrushVar.signal.mapLazy {
           case _: Clue.MiniCross => true
           case _ => false
@@ -225,6 +234,7 @@ object ClueBrushEditor {
       item1(
         "Knight",
         Clue.Knight(_),
+        (0, 8),
         clueBrushVar.signal.mapLazy {
           case _: Clue.Knight => true
           case _ => false
@@ -233,6 +243,7 @@ object ClueBrushEditor {
       item1(
         "Longest Wall",
         Clue.LongestWall(_),
+        (0, 8),
         clueBrushVar.signal.mapLazy {
           case _: Clue.LongestWall => true
           case _ => false
@@ -241,6 +252,7 @@ object ClueBrushEditor {
       item1(
         "Eyesight'",
         Clue.EyesightPrime(_),
+        (Int.MinValue, Int.MaxValue),
         clueBrushVar.signal.mapLazy {
           case _: Clue.EyesightPrime => true
           case _ => false
