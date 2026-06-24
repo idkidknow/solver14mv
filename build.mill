@@ -1,4 +1,4 @@
-//| mill-version: 1.1.6
+//| mill-version: 1.1.7
 //| mvnDeps:
 //| - com.goyeau::mill-scalafix::0.6.0
 
@@ -11,7 +11,7 @@ import mainargs.Flag
 
 object solver14mv extends ScalaJSModule with ScalafixModule {
   def scalaVersion = "3.8.4"
-  def scalaJSVersion = "1.21.0"
+  def scalaJSVersion = "1.22.0"
 
   def mvnDeps = Seq(
     mvn"org.scala-js::scalajs-dom::2.8.1",
