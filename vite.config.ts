@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [tailwindcss()],
   resolve: {
     alias: {
-      "@": __dirname,
-      "@scala": path.resolve(__dirname, "./out/build.dest"),
-      "@src": path.resolve(__dirname, "./solver14mv/src"),
+      "@": import.meta.dirname,
+      "@scala": path.resolve(import.meta.dirname, "./out/build.dest"),
+      "@src": path.resolve(import.meta.dirname, "./solver14mv/src"),
     },
   },
   server: {

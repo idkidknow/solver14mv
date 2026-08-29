@@ -22,8 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@scala/*": ["./out/build.dest/*"],
-    },
+      "@scala/*": ["./out/build.dest/*"]
+    }
   },
-  "include": ["src"],
+  "include": ["src"]
 }

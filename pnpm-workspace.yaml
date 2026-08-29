@@ -1,6 +1,6 @@
 allowBuilds:
   msw: false
 overrides:
-  vite: ^8.0.0
+  vite: ^8.2.2
 patchedDependencies:
-  minizinc: patches/minizinc.patch
+  minizinc@4.5.1: patches/minizinc@4.5.1.patch
